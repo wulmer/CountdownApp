@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtWidgets
 
 class Styles:
     widget = "QWidget {}"
-    labels = "QLabel {color: #fff; font-size: 150px; font-weight: bold;}"
+    labels = "QLabel {color: #fff; font-size: 200px; font-weight: bold;}"
 
 
 class CountdownWindow(QtWidgets.QMainWindow):
@@ -23,25 +23,29 @@ class CountdownWindow(QtWidgets.QMainWindow):
         self.setObjectName("Form")
 
         # Create a frameless window
-        flags = QtCore.Qt.WindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        flags = QtCore.Qt.WindowFlags(
+            QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
+        )
         self.setWindowFlags(flags)
 
         # Place window on right lower corner
-        lower_right_corner = QtWidgets.QDesktopWidget().availableGeometry().bottomRight()
-        width = 500
-        height = 150
+        lower_right_corner = (
+            QtWidgets.QDesktopWidget().availableGeometry().bottomRight()
+        )
+        width = 600
+        height = 220
         x = lower_right_corner.x() - width
         y = lower_right_corner.y() - height
         self.setGeometry(x, y, width, height)
 
         # Make the background translucent
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground,on=True)
-        
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, on=True)
+
         self.widget = QtWidgets.QWidget(self)
         self.widget.setStyleSheet(Styles.widget)
         self.widget.setObjectName("widget")
-        self.widget.resize(600,200)
-        
+        self.widget.resize(600, 200)
+
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName("horizontalLayout")
 
@@ -57,7 +61,7 @@ class CountdownWindow(QtWidgets.QMainWindow):
     def set_remaining_time(self, seconds: int):
         sec = seconds % 60
         min = int(seconds / 60)
-        self.lblTime.setText(f'{min:02d}:{sec:02d}')
+        self.lblTime.setText(f"{min:02d}:{sec:02d}")
 
     def start(self):
         self._active = True
@@ -75,12 +79,12 @@ class CountdownWindow(QtWidgets.QMainWindow):
         self.close()
 
     def mousePressEvent(self, event):
-            self.oldPos = event.globalPos()
+        self.oldPos = event.globalPos()
 
     def mouseMoveEvent(self, event):
-            delta = QtCore.QPoint (event.globalPos() - self.oldPos)
-            self.move(self.x() + delta.x(), self.y() + delta.y())
-            self.oldPos = event.globalPos()
+        delta = QtCore.QPoint(event.globalPos() - self.oldPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.oldPos = event.globalPos()
 
     def closeEvent(self, event):
         self._active = False
@@ -94,15 +98,14 @@ def read_end_time():
             "Countdown Timer",
             "Endzeitpunkt",
             QtWidgets.QLineEdit.Normal,
-            "10:00:00"
+            "10:00:00",
         )
         if not ok:
             return None
         elif text:
             try:
                 end_time = datetime.datetime.combine(
-                    datetime.datetime.today(),
-                    datetime.time.fromisoformat(text)
+                    datetime.datetime.today(), datetime.time.fromisoformat(text)
                 )
                 current_time = datetime.datetime.now()
                 diff_seconds = (end_time - current_time).total_seconds()
