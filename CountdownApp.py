@@ -11,7 +11,7 @@ class Styles:
     labels = "QLabel {color: #fff; font-size: 200px; font-weight: bold;}"
 
 
-class CountdownWindow(QtWidgets.QMainWindow):
+class CountdownTimer(QtWidgets.QWidget):
     def __init__(self, end_time: datetime.time):
         super().__init__()
         self._end_time = end_time
@@ -20,8 +20,50 @@ class CountdownWindow(QtWidgets.QMainWindow):
         self.start()
 
     def _init_ui(self):
-        self.setObjectName("Form")
+        self.setStyleSheet(Styles.widget)
+        self.resize(600, 200)
 
+        self._horizontalLayout = QtWidgets.QHBoxLayout(self)
+        self._horizontalLayout.setObjectName("horizontalLayout")
+
+        self._lblTime = QtWidgets.QLabel(self)
+        self._lblTime.setStyleSheet(Styles.labels)
+        self._lblTime.setAlignment(QtCore.Qt.AlignCenter)
+        self._horizontalLayout.addWidget(self._lblTime)
+        self.setLayout(self._horizontalLayout)
+
+    def set_remaining_time(self, seconds: int):
+        sec = seconds % 60
+        min = int(seconds / 60)
+        self._lblTime.setText(f"{min:02d}:{sec:02d}")
+
+    def start(self):
+        self._active = True
+        t = Thread(target=self._run)
+        t.start()
+
+    def _run(self):
+        end_time = self._end_time
+        diff_seconds = 1
+        while self._active and diff_seconds > 0:
+            current_time = datetime.datetime.now()
+            diff_seconds = int((end_time - current_time).total_seconds())
+            self.set_remaining_time(diff_seconds)
+            time.sleep(1)
+        self.close()
+
+    def closeEvent(self, event):
+        self._active = False
+        event.accept()
+
+
+class CountdownWindow(QtWidgets.QMainWindow):
+    def __init__(self, end_time: datetime.time):
+        super().__init__()
+        self._timerWidget = CountdownTimer(end_time)
+        self._init_ui()
+
+    def _init_ui(self):
         # Create a frameless window
         flags = QtCore.Qt.WindowFlags(
             QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint
@@ -41,42 +83,9 @@ class CountdownWindow(QtWidgets.QMainWindow):
         # Make the background translucent
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, on=True)
 
-        self.widget = QtWidgets.QWidget(self)
-        self.widget.setStyleSheet(Styles.widget)
-        self.widget.setObjectName("widget")
-        self.widget.resize(600, 200)
-
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-
-        self.lblTime = QtWidgets.QLabel(self.widget)
-        self.lblTime.setStyleSheet(Styles.labels)
-        self.lblTime.setAlignment(QtCore.Qt.AlignCenter)
-        self.horizontalLayout.addWidget(self.lblTime)
-
-        self.setCentralWidget(self.widget)
+        self.setCentralWidget(self._timerWidget)
 
         QtCore.QMetaObject.connectSlotsByName(self)
-
-    def set_remaining_time(self, seconds: int):
-        sec = seconds % 60
-        min = int(seconds / 60)
-        self.lblTime.setText(f"{min:02d}:{sec:02d}")
-
-    def start(self):
-        self._active = True
-        t = Thread(target=self._run)
-        t.start()
-
-    def _run(self):
-        end_time = self._end_time
-        diff_seconds = 1
-        while self._active and diff_seconds > 0:
-            current_time = datetime.datetime.now()
-            diff_seconds = int((end_time - current_time).total_seconds())
-            self.set_remaining_time(diff_seconds)
-            time.sleep(1)
-        self.close()
 
     def mousePressEvent(self, event):
         self.oldPos = event.globalPos()
@@ -87,7 +96,7 @@ class CountdownWindow(QtWidgets.QMainWindow):
         self.oldPos = event.globalPos()
 
     def closeEvent(self, event):
-        self._active = False
+        self._timerWidget._active = False
         event.accept()
 
 
