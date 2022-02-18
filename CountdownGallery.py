@@ -3,7 +3,7 @@ import sys
 
 from PyQt5 import QtCore, QtWidgets
 
-from countdownapp import SimpleCountdownWindow
+from countdownapp import GalleryCountdownWindow
 
 
 def read_end_time():
@@ -34,9 +34,12 @@ def read_end_time():
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    end_time = read_end_time()
+    # end_time = read_end_time()
+    end_time = datetime.datetime.combine(
+        datetime.datetime.today(), datetime.time.fromisoformat("02:00:00")
+    )
 
     if end_time:
-        ui = SimpleCountdownWindow(end_time)
+        ui = GalleryCountdownWindow(end_time)
         ui.show()
         sys.exit(app.exec_())
