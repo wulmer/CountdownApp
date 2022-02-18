@@ -7,6 +7,7 @@ name = "pypi"
 pyqt5 = "*"
 pyinstaller = "*"
 countdownapp = {editable = true, path = "."}
+pywin32-ctypes = "*"
 
 [dev-packages]
 black = "*"
