@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c84c5931d7ff0211d457a9f47dcb9d192e0b0b3f153313544a632bd40ea36302"
+            "sha256": "7e0fc465e6a065f4d7d3ca6e02cc4473258f4d9aba05e1fa33567586d50c39ee"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,6 +26,20 @@
         "countdownapp": {
             "editable": true,
             "path": "."
+        },
+        "future": {
+            "hashes": [
+                "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
+            ],
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==0.18.2"
+        },
+        "pefile": {
+            "hashes": [
+                "sha256:344a49e40a94e10849f0fe34dddc80f773a12b40675bf2f7be4b8be578bdd94a"
+            ],
+            "index": "pypi",
+            "version": "==2021.9.3"
         },
         "pyinstaller": {
             "hashes": [

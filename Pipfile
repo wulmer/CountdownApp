@@ -8,6 +8,7 @@ pyqt5 = "*"
 pyinstaller = "*"
 countdownapp = {editable = true, path = "."}
 pywin32-ctypes = "*"
+pefile = "*"
 
 [dev-packages]
 black = "*"
