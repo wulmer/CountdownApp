@@ -11,12 +11,11 @@ class Styles:
 
 
 class CountdownTimer(QtWidgets.QWidget):
-    def __init__(self, parent: QtWidgets.QWidget, end_time: datetime.time):
+    def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
-        self._end_time = end_time
+        self._end_time = None
         self._active = False
         self._init_ui()
-        self.start()
 
     def _init_ui(self):
         # Make the background translucent
@@ -36,25 +35,32 @@ class CountdownTimer(QtWidgets.QWidget):
         self._horizontalLayout.addWidget(self._lblTime)
         self.setLayout(self._horizontalLayout)
 
-    def set_remaining_time(self, seconds: int):
-        sec = seconds % 60
-        min = int(seconds / 60)
-        self._lblTime.setText(f"{min:02d}:{sec:02d}")
-
-    def start(self):
+    def start(self, end_time: datetime.datetime):
+        self._end_time = end_time
         self._active = True
         t = Thread(target=self._run)
         t.start()
 
+    def stop(self):
+        self._active = False
+        self._lblTime.setText("")
+
     def _run(self):
-        end_time = self._end_time
-        diff_seconds = 1
-        while self._active and diff_seconds > 0:
-            current_time = datetime.datetime.now()
-            diff_seconds = int((end_time - current_time).total_seconds())
-            self.set_remaining_time(diff_seconds)
-            time.sleep(1)
-        self.close()
+        while self._active:
+            if not self._end_time:
+                time.sleep(1)
+            else:
+                diff_seconds = 1
+                while self._active and diff_seconds >= 0:
+                    current_time = datetime.datetime.now()
+                    diff_seconds = int((self._end_time - current_time).total_seconds())
+                    if diff_seconds >= 0:
+                        sec = diff_seconds % 60
+                        min = int(diff_seconds / 60)
+                        self._lblTime.setText(f"{min:02d}:{sec:02d}")
+                        time.sleep(1)
+                    else:
+                        self.stop()
 
     def closeEvent(self, event):
         self._active = False
