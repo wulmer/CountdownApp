@@ -24,7 +24,7 @@ jobs:
         pipenv install
     - name: Build installer
       run: |
-        pipenv run pyinstaller --onefile --noconsole CountdownApp.py
+        pipenv run pyinstaller --onefile --noconsole CountdownGallery.py
     - name: Store installer
       uses: actions/upload-artifact@v2
       with:
