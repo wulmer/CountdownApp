@@ -99,6 +99,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._timerWidget = None
         self._slidesWidget = None
         self._fullscreen = False
+        self._timerCorner = 3
         self._init_ui()
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
@@ -131,17 +132,70 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_F:
             self.setFullScreen(not self._fullscreen)
-        if event.key() == QtCore.Qt.Key_Q:
+        elif event.key() == QtCore.Qt.Key_Q:
             self.close()
+        elif event.key() == QtCore.Qt.Key_1:
+            self._timerCorner = 1
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_2:
+            self._timerCorner = 2
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_3:
+            self._timerCorner = 3
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_4:
+            self._timerCorner = 4
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_6:
+            self._timerCorner = 6
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_7:
+            self._timerCorner = 7
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_8:
+            self._timerCorner = 8
+            self.resizeEvent()
+        elif event.key() == QtCore.Qt.Key_9:
+            self._timerCorner = 9
+            self.resizeEvent()
 
     def resizeEvent(self, event=None):
         if self._timerWidget is not None:
-            # Place timer in lower right corner
-            lower_right_corner = self.size()
             width = self._timerWidget.minimumWidth()
             height = self._timerWidget.minimumHeight()
-            x = lower_right_corner.width() - width
-            y = lower_right_corner.height() - height
+            lower_right_corner = self.size()
+            if self._timerCorner == 1:
+                # Place timer in lower left corner
+                x = 0
+                y = lower_right_corner.height() - height
+            elif self._timerCorner == 2:
+                # Place timer in bottom center
+                x = (lower_right_corner.width() - width) / 2
+                y = lower_right_corner.height() - height
+            elif self._timerCorner == 3:
+                # Place timer in lower right corner
+                x = lower_right_corner.width() - width
+                y = lower_right_corner.height() - height
+            elif self._timerCorner == 4:
+                # Place timer in left center
+                x = 0
+                y = (lower_right_corner.height() - height) / 2
+            elif self._timerCorner == 6:
+                # Place timer in right center
+                x = lower_right_corner.width() - width
+                y = (lower_right_corner.height() - height) / 2
+            elif self._timerCorner == 7:
+                # Place timer in upper left corner
+                x = 0
+                y = 0
+            elif self._timerCorner == 8:
+                # Place timer in upper center
+                x = (lower_right_corner.width() - width) / 2
+                y = 0
+            elif self._timerCorner == 9:
+                # Place timer in upper right corner
+                x = lower_right_corner.width() - width
+                y = 0
             self._timerWidget.setGeometry(x, y, width, height)
 
         # Make slides full screen
@@ -166,24 +220,90 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self.setWindowTitle("Countdown Gallery Configuration")
 
         # layout
-        self._layout = QtWidgets.QGridLayout(self)
+        self._layout = QtWidgets.QVBoxLayout(self)
 
-        # end_time
-        row = 0
-        self._end_time_label = QtWidgets.QLabel("Endzeitpunkt:", self)
-        self._layout.addWidget(
-            self._end_time_label, row, 0, QtCore.Qt.AlignmentFlag.AlignLeft
-        )
+        # timer config
+        self._timerbox = QtWidgets.QGroupBox("Timer", self)
+        self._layout1 = QtWidgets.QFormLayout(self)
+
+        # # end_time
+        self._end_time_label = QtWidgets.QLabel("Endzeitpunkt [hh:mm:ss]:", self)
         self._end_time_input = QtWidgets.QLineEdit("10:00:00", self)
-        self._layout.addWidget(
-            self._end_time_input, row, 1, QtCore.Qt.AlignmentFlag.AlignLeft
-        )
         self._end_time_input.editingFinished.connect(self.on_end_time_changed)
+        self._layout1.addRow(self._end_time_label, self._end_time_input)
 
-        # directory
-        row = 1
-        self._layout.addWidget(QtWidgets.QLabel("Verzeichnis mit Bildern:"), row, 0)
-        self._dir_label = QtWidgets.QLabel("", self)
+        # # corner
+        self._end_time_corner_label = QtWidgets.QLabel("Bildschirmecke:", self)
+        self._end_time_corner_widget = QtWidgets.QWidget(self)
+        self._end_time_corner_layout = QtWidgets.QGridLayout(self)
+
+        # # #
+        self._corner_button1 = QtWidgets.QPushButton("1", self)
+        self._corner_button2 = QtWidgets.QPushButton("2", self)
+        self._corner_button3 = QtWidgets.QPushButton("3", self)
+        self._corner_button4 = QtWidgets.QPushButton("4", self)
+        self._corner_button6 = QtWidgets.QPushButton("6", self)
+        self._corner_button7 = QtWidgets.QPushButton("7", self)
+        self._corner_button8 = QtWidgets.QPushButton("8", self)
+        self._corner_button9 = QtWidgets.QPushButton("9", self)
+        self._end_time_corner_layout.addWidget(
+            self._corner_button1,
+            2,
+            0,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button2,
+            2,
+            1,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button3,
+            2,
+            2,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button4,
+            1,
+            0,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button6,
+            1,
+            2,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button7,
+            0,
+            0,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button8,
+            0,
+            1,
+        )
+        self._end_time_corner_layout.addWidget(
+            self._corner_button9,
+            0,
+            2,
+        )
+
+        self._end_time_corner_widget.setLayout(self._end_time_corner_layout)
+        self._layout1.addRow(self._end_time_corner_label, self._end_time_corner_widget)
+
+        self._timerbox.setLayout(self._layout1)
+        self._layout.addWidget(self._timerbox)
+
+        # slideshow config
+        self._slideshowbox = QtWidgets.QGroupBox("Diashow", self)
+        self._layout2 = QtWidgets.QFormLayout(self)
+
+        # # directory
+        self._dir_widget = QtWidgets.QWidget(self)
+        self._dir_layout = QtWidgets.QHBoxLayout()
+        self._dir_label = QtWidgets.QLineEdit("", self)
+        self._dir_label.setEnabled(False)
+        self._dir_label.setMinimumWidth(200)
+        self._dir_layout.addWidget(self._dir_label)
         self._dir_button = QtWidgets.QPushButton(
             QtWidgets.QApplication.style().standardIcon(
                 QtWidgets.QStyle.SP_DirOpenIcon
@@ -192,24 +312,27 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self,
         )
         self._dir_button.clicked.connect(self.on_dir_button_clicked)
-        self._layout.addWidget(
-            self._dir_label, row, 1, QtCore.Qt.AlignmentFlag.AlignLeft
+        self._dir_layout.addWidget(self._dir_button)
+        self._layout2.addRow(
+            QtWidgets.QLabel("Verzeichnis mit Bildern:"),
+            self._dir_widget,
         )
-        self._layout.addWidget(
-            self._dir_button, row, 2, QtCore.Qt.AlignmentFlag.AlignLeft
+        self._dir_widget.setLayout(self._dir_layout)
+
+        # # slideshow pause
+        self._pause_input = QtWidgets.QLineEdit("5", self)
+        self._pause_input.editingFinished.connect(self.on_pause_changed)
+        self._layout2.addRow(
+            QtWidgets.QLabel("Pause zw. Bildern [s]:"), self._pause_input
         )
 
-        # slideshow pause
-        row = 2
-        self._layout.addWidget(QtWidgets.QLabel("Pause zw. Bildern [s]:"), row, 0)
-        self._pause_input = QtWidgets.QLineEdit("5", self)
-        self._layout.addWidget(
-            self._pause_input, row, 1, QtCore.Qt.AlignmentFlag.AlignLeft
-        )
-        self._pause_input.editingFinished.connect(self.on_pause_changed)
+        self._slideshowbox.setLayout(self._layout2)
+        self._layout.addWidget(self._slideshowbox)
 
         self.setLayout(self._layout)
         QtCore.QMetaObject.connectSlotsByName(self)
+
+        # initialize app with config dialog values
         self.on_end_time_changed()
         self.on_pause_changed()
         # self.on_dir_button_clicked()
