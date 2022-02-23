@@ -98,7 +98,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         super().__init__()
         self._timerWidget = None
         self._slidesWidget = None
-        self._fullscreen = False
+        self._is_fullscreen = False
         self._timerCorner = 3
         self._init_ui()
         self._config_window = GalleryConfigWindow(self)
@@ -118,51 +118,51 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         # create timer
         self._timerWidget = CountdownTimer(self._widget)
 
-        self.setFullScreen(self._fullscreen)
+        self.setFullScreen(self._is_fullscreen)
 
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def setFullScreen(self, fullscreen: bool):
-        self._fullscreen = fullscreen
-        if self._fullscreen:
+        self._is_fullscreen = fullscreen
+        if self._is_fullscreen:
             self.showFullScreen()
         else:
             self.showNormal()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_F:
-            self.setFullScreen(not self._fullscreen)
+            self.setFullScreen(not self._is_fullscreen)
         elif event.key() == QtCore.Qt.Key_Q:
             self.close()
         elif event.key() == QtCore.Qt.Key_1:
-            self._timerCorner = 1
-            self.resizeEvent()
+            self.setTimerCorner(1)
         elif event.key() == QtCore.Qt.Key_2:
-            self._timerCorner = 2
-            self.resizeEvent()
+            self.setTimerCorner(2)
         elif event.key() == QtCore.Qt.Key_3:
-            self._timerCorner = 3
-            self.resizeEvent()
+            self.setTimerCorner(3)
         elif event.key() == QtCore.Qt.Key_4:
-            self._timerCorner = 4
-            self.resizeEvent()
+            self.setTimerCorner(4)
         elif event.key() == QtCore.Qt.Key_6:
-            self._timerCorner = 6
-            self.resizeEvent()
+            self.setTimerCorner(6)
         elif event.key() == QtCore.Qt.Key_7:
-            self._timerCorner = 7
-            self.resizeEvent()
+            self.setTimerCorner(7)
         elif event.key() == QtCore.Qt.Key_8:
-            self._timerCorner = 8
-            self.resizeEvent()
+            self.setTimerCorner(8)
         elif event.key() == QtCore.Qt.Key_9:
-            self._timerCorner = 9
-            self.resizeEvent()
+            self.setTimerCorner(9)
+
+    def setTimerCorner(self, corner: int):
+        self._timerCorner = corner
+        self.resizeEvent()
+
+    def setTimerFontSize(self, size: int):
+        self._timerWidget.setFontSize(size)
+        self.resizeEvent()
 
     def resizeEvent(self, event=None):
         if self._timerWidget is not None:
-            width = self._timerWidget.minimumWidth()
-            height = self._timerWidget.minimumHeight()
+            width = self._timerWidget.width()
+            height = self._timerWidget.height()
             lower_right_corner = self.size()
             if self._timerCorner == 1:
                 # Place timer in lower left corner
@@ -214,6 +214,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
     def __init__(self, gallery_window: GalleryCountdownWindow):
         super().__init__()
         self._gallery_window = gallery_window
+        self._timer_color = QtGui.QColor("white")
         self._init_ui()
 
     def _init_ui(self):
@@ -224,7 +225,15 @@ class GalleryConfigWindow(QtWidgets.QWidget):
 
         # timer config
         self._timerbox = QtWidgets.QGroupBox("Timer", self)
-        self._layout1 = QtWidgets.QFormLayout(self)
+        self._layout1 = QtWidgets.QFormLayout()
+
+        # # timer visible
+        self._visible_timer_cb = QtWidgets.QCheckBox(self)
+        self._visible_timer_cb.setChecked(True)
+        self._visible_timer_cb.stateChanged.connect(self.on_timer_visible_cb_changed)
+        self._layout1.addRow(
+            QtWidgets.QLabel("Sichtbar:", self), self._visible_timer_cb
+        )
 
         # # end_time
         self._end_time_label = QtWidgets.QLabel("Endzeitpunkt [hh:mm:ss]:", self)
@@ -232,60 +241,48 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self._end_time_input.editingFinished.connect(self.on_end_time_changed)
         self._layout1.addRow(self._end_time_label, self._end_time_input)
 
+        # # font size
+        self._font_size_input = QtWidgets.QLineEdit("200")
+        self._font_size_input.editingFinished.connect(self.on_font_size_changed)
+        self._layout1.addRow(
+            QtWidgets.QLabel("Schriftgröße [pt]:"), self._font_size_input
+        )
+
+        # # timer color
+        self._font_color_button = QtWidgets.QPushButton()
+        self._font_color_button.setStyleSheet(
+            f"QPushButton {{background-color: {self._timer_color.name()}}}"
+        )
+        self._font_color_button.clicked.connect(self.on_font_color_button_clicked)
+        self._layout1.addRow(QtWidgets.QLabel("Schriftfarbe:"), self._font_color_button)
+
         # # corner
         self._end_time_corner_label = QtWidgets.QLabel("Bildschirmecke:", self)
         self._end_time_corner_widget = QtWidgets.QWidget(self)
-        self._end_time_corner_layout = QtWidgets.QGridLayout(self)
+        self._end_time_corner_layout = QtWidgets.QGridLayout()
 
         # # #
-        self._corner_button1 = QtWidgets.QPushButton("1", self)
-        self._corner_button2 = QtWidgets.QPushButton("2", self)
-        self._corner_button3 = QtWidgets.QPushButton("3", self)
-        self._corner_button4 = QtWidgets.QPushButton("4", self)
-        self._corner_button6 = QtWidgets.QPushButton("6", self)
-        self._corner_button7 = QtWidgets.QPushButton("7", self)
-        self._corner_button8 = QtWidgets.QPushButton("8", self)
-        self._corner_button9 = QtWidgets.QPushButton("9", self)
-        self._end_time_corner_layout.addWidget(
-            self._corner_button1,
-            2,
-            0,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button2,
-            2,
-            1,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button3,
-            2,
-            2,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button4,
-            1,
-            0,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button6,
-            1,
-            2,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button7,
-            0,
-            0,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button8,
-            0,
-            1,
-        )
-        self._end_time_corner_layout.addWidget(
-            self._corner_button9,
-            0,
-            2,
-        )
+        corner_button_pos = {
+            1: (2, 0),
+            2: (2, 1),
+            3: (2, 2),
+            4: (1, 0),
+            6: (1, 2),
+            7: (0, 0),
+            8: (0, 1),
+            9: (0, 2),
+        }
+        corner_buttons = {}
+        for number in corner_button_pos:
+            button = QtWidgets.QPushButton(str(number), self)
+            pos = corner_button_pos[number]
+            self._end_time_corner_layout.addWidget(
+                button,
+                pos[0],
+                pos[1],
+            )
+            button.clicked.connect(self.on_corner_button_clicked)
+            corner_buttons[number] = button
 
         self._end_time_corner_widget.setLayout(self._end_time_corner_layout)
         self._layout1.addRow(self._end_time_corner_label, self._end_time_corner_widget)
@@ -295,7 +292,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
 
         # slideshow config
         self._slideshowbox = QtWidgets.QGroupBox("Diashow", self)
-        self._layout2 = QtWidgets.QFormLayout(self)
+        self._layout2 = QtWidgets.QFormLayout()
 
         # # directory
         self._dir_widget = QtWidgets.QWidget(self)
@@ -335,7 +332,34 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         # initialize app with config dialog values
         self.on_end_time_changed()
         self.on_pause_changed()
+        self.on_timer_visible_cb_changed()
+        self.on_font_size_changed()
         # self.on_dir_button_clicked()
+
+    def on_timer_visible_cb_changed(self):
+        if self._visible_timer_cb.isChecked():
+            self._gallery_window._timerWidget.show()
+        else:
+            self._gallery_window._timerWidget.hide()
+
+    def on_corner_button_clicked(self):
+        number = int(self.sender().text())
+        self._gallery_window.setTimerCorner(number)
+
+    def on_font_size_changed(self):
+        try:
+            font_size = int(self._font_size_input.text())
+        except ValueError:
+            return
+        self._gallery_window.setTimerFontSize(font_size)
+
+    def on_font_color_button_clicked(self):
+        color = QtWidgets.QColorDialog.getColor(self._timer_color)
+        self._timer_color = color
+        self._font_color_button.setStyleSheet(
+            f"QPushButton {{background-color: {self._timer_color.name()}}}"
+        )
+        self._gallery_window._timerWidget.setFontColor(self._timer_color)
 
     def on_dir_button_clicked(self):
         choice = QtWidgets.QFileDialog.getExistingDirectory(parent=self)

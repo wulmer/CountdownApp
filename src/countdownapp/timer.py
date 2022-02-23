@@ -2,15 +2,10 @@ import datetime
 import time
 from threading import Thread
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Styles:
-    widget = "QWidget {border: 1px solid red}"
-    labels = "QLabel {color: #fff; font-size: 200px; font-weight: bold;}"
-
-
-class CountdownTimer(QtWidgets.QWidget):
+class CountdownTimer(QtWidgets.QLabel):
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
         self._end_time = None
@@ -21,19 +16,19 @@ class CountdownTimer(QtWidgets.QWidget):
         # Make the background translucent
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground, on=True)
 
-        self.setStyleSheet(Styles.widget)
-        self.resize(600, 200)
-        self.setMinimumSize(600, 200)
-        self.setMaximumSize(600, 200)
+        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setFont(QtGui.QFont("Arial", 200, QtGui.QFont.Bold, False))
+        self.setFontColor(QtGui.QColor("white"))
 
-        self._horizontalLayout = QtWidgets.QHBoxLayout(self)
-        self._horizontalLayout.setObjectName("horizontalLayout")
+    def setFontColor(self, color: QtGui.QColor):
+        self.setStyleSheet(f"QLabel {{color: {color.name()}}}")
 
-        self._lblTime = QtWidgets.QLabel(self)
-        self._lblTime.setStyleSheet(Styles.labels)
-        self._lblTime.setAlignment(QtCore.Qt.AlignCenter)
-        self._horizontalLayout.addWidget(self._lblTime)
-        self.setLayout(self._horizontalLayout)
+    def setFontSize(self, size: int):
+        self.setFont(QtGui.QFont("Arial", size, QtGui.QFont.Bold, False))
+        old_text = self.text()
+        self.setText("00:00")
+        self.adjustSize()
+        self.setText(old_text)
 
     def start(self, end_time: datetime.datetime):
         self._end_time = end_time
@@ -43,7 +38,7 @@ class CountdownTimer(QtWidgets.QWidget):
 
     def stop(self):
         self._active = False
-        self._lblTime.setText("")
+        self.setText("")
 
     def _run(self):
         while self._active:
@@ -57,7 +52,7 @@ class CountdownTimer(QtWidgets.QWidget):
                     if diff_seconds >= 0:
                         sec = diff_seconds % 60
                         min = int(diff_seconds / 60)
-                        self._lblTime.setText(f"{min:02d}:{sec:02d}")
+                        self.setText(f"{min:02d}:{sec:02d}")
                         time.sleep(1)
                     else:
                         self.stop()
