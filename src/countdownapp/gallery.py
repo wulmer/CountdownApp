@@ -12,10 +12,12 @@ class PixmapView(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
 
+        self._slideshow_paddings = [0, 0, 0, 0]
         self._bg_pic = None
         self._bg_pic_label = QtWidgets.QLabel(self)
         self._pic = None
         self._pic_label = QtWidgets.QLabel(self)
+        self._pic_label.setStyleSheet("QLabel { background: black solid }")
 
     def set_background_picture(self, filename: Path):
         self._bg_pic = QtGui.QPixmap(str(filename))
@@ -33,6 +35,11 @@ class PixmapView(QtWidgets.QWidget):
 
         return QtCore.QMargins(-left, -top, -right, -bottom)
 
+    def setSlideShowPaddings(self, paddings):
+        if len(paddings) == 4:
+            self._slideshow_paddings = paddings
+            self.resizeEvent()
+
     def resizeEvent(self, event=None):
         size = self.size()
         if self._bg_pic:
@@ -49,18 +56,26 @@ class PixmapView(QtWidgets.QWidget):
             self._bg_pic_label.setStyleSheet("QLabel { background-color: black }")
         self._bg_pic_label.setGeometry(0, 0, size.width(), size.height())
 
+        p = self._slideshow_paddings
+        slides_size = QtCore.QSize(
+            size.width() - (p[1] + p[3]), size.height() - (p[0] + p[2])
+        )
         if self._pic:
             self._pic_label.show()
             scaled = self._pic.scaled(
-                size,
+                slides_size,
                 QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                 QtCore.Qt.TransformationMode.SmoothTransformation,
             )
             self._pic_label.setPixmap(scaled)
-            self._pic_label.setContentsMargins(self.calc_margins(size, scaled.size()))
+            self._pic_label.setContentsMargins(
+                self.calc_margins(slides_size, scaled.size())
+            )
         else:
             self._pic_label.hide()
-        self._pic_label.setGeometry(0, 0, size.width() * 0.9, size.height() * 0.9)
+        self._pic_label.setGeometry(
+            p[3], p[0], slides_size.width(), slides_size.height()
+        )
 
 
 class Slideshow(QtWidgets.QWidget):
@@ -120,7 +135,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
 
     def _init_ui(self):
         self.setWindowTitle("Countdown Gallery")
-        self.resize(800, 400)
+        self.resize(800, 700)
 
         # central widget
         self._widget = QtWidgets.QFrame()
@@ -131,6 +146,14 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
 
         # create timer
         self._timerWidget = CountdownTimer(self._widget)
+
+        # create keyboard hint
+        self._shortcut_help_label = QtWidgets.QLabel(self)
+        self._shortcut_help_label.setText("f = Vollbild\nq = Beenden\n")
+        self._shortcut_help_label.adjustSize()
+        self._shortcut_help_label.setStyleSheet(
+            "QLabel { color: white; background-color: rgba(0,0,0,10) }"
+        )
 
         self.setFullScreen(self._is_fullscreen)
 
@@ -150,9 +173,11 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
     def setFullScreen(self, fullscreen: bool):
         self._is_fullscreen = fullscreen
         if self._is_fullscreen:
+            self._shortcut_help_label.setHidden(True)
             self.showFullScreen()
         else:
             self.showNormal()
+            self._shortcut_help_label.setHidden(False)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_F:
@@ -228,6 +253,14 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
             0, 0, lower_right_corner.width(), lower_right_corner.height()
         )
 
+        # Shortcuts
+        size = self.size()
+        lbl_size = self._shortcut_help_label.size()
+        self._shortcut_help_label.move(
+            (size.width() - lbl_size.width()) / 2,
+            (size.height() - lbl_size.height()) / 2,
+        )
+
     def closeEvent(self, event):
         if self._timerWidget is not None:
             self._timerWidget._active = False
@@ -267,7 +300,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self._layout1.addRow(self._end_time_label, self._end_time_input)
 
         # # font size
-        self._font_size_input = QtWidgets.QLineEdit("200")
+        self._font_size_input = QtWidgets.QLineEdit("180")
         self._font_size_input.editingFinished.connect(self.on_font_size_changed)
         self._layout1.addRow(
             QtWidgets.QLabel("Schriftgröße [pt]:"), self._font_size_input
@@ -365,7 +398,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         # # filename
         self._bg_widget = QtWidgets.QWidget(self)
         self._bg_layout = QtWidgets.QHBoxLayout()
-        self._bg_fn_label = QtWidgets.QLineEdit("", self)
+        self._bg_fn_label = QtWidgets.QLineEdit("./Hintergrundbild.png", self)
         self._bg_fn_label.setEnabled(False)
         self._bg_fn_label.setMinimumWidth(200)
         self._bg_layout.addWidget(self._bg_fn_label)
@@ -415,6 +448,16 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             QtWidgets.QLabel("Pause zw. Bildern [s]:"), self._pause_input
         )
 
+        # # slideshow padding
+        self._slideshow_paddings = QtWidgets.QLineEdit("100 700 100 50", self)
+        self._slideshow_paddings.editingFinished.connect(
+            self.on_slideshow_padding_changed
+        )
+        self._layout2.addRow(
+            QtWidgets.QLabel("Rand (oben rechts unten links)"),
+            self._slideshow_paddings,
+        )
+
         self._slideshowbox.setLayout(self._layout2)
         self._layout.addWidget(self._slideshowbox)
 
@@ -422,10 +465,15 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         QtCore.QMetaObject.connectSlotsByName(self)
 
         # initialize app with config dialog values
+        self._padding_x_slider.setValue(20)
+        self._padding_y_slider.setValue(20)
         self.on_end_time_changed()
         self.on_pause_changed()
         self.on_timer_visible_cb_changed()
         self.on_font_size_changed()
+        self.on_padding_x_value_changed()
+        self.on_padding_y_value_changed()
+        self.on_slideshow_padding_changed()
         # self.on_dir_button_clicked()
 
     def on_timer_visible_cb_changed(self):
@@ -476,6 +524,15 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self._dir_label.setText(choice)
             self.on_pause_changed()
             self._gallery_window._slidesWidget.start(folder)
+
+    def on_slideshow_padding_changed(self):
+        padding = self._slideshow_paddings.text()
+        try:
+            padding_values = [int(p.strip()) for p in padding.split()]
+        except ValueError:
+            self._slideshow_paddings.setText("0 0 0 0")
+            padding_values = [0, 0, 0, 0]
+        self._gallery_window._slidesWidget._view.setSlideShowPaddings(padding_values)
 
     def on_end_time_changed(self):
         text = self._end_time_input.text()
