@@ -8,49 +8,59 @@ from .timer import CountdownTimer
 IMG_SUFFIXES = {".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".png"}
 
 
-class Styles:
-    widget = "QWidget {border: 1px solid red}"
-    labels = "QLabel {color: #fff; font-size: 200px; font-weight: bold;}"
-
-
-class PixmapView(QtWidgets.QGraphicsView):
+class PixmapView(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget):
-        self._scene = QtWidgets.QGraphicsScene()
-        super().__init__(self._scene, parent)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        super().__init__(parent)
 
-        self._pixmap = None
-        self._pixmap_item = QtWidgets.QGraphicsPixmapItem()
-        self._scene.addItem(self._pixmap_item)
+        self._bg_pic = None
+        self._bg_pic_label = QtWidgets.QLabel(self)
+        self._pic = None
+        self._pic_label = QtWidgets.QLabel(self)
 
-        self.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.setFrameStyle(QtWidgets.QFrame.NoFrame)
-
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        self.setBackgroundBrush(brush)
-
-        self._zoom_level = 1
-
-    def set_next(self, pixmap: QtGui.QPixmap):
-        self._pixmap = pixmap
-        self._pixmap_item.setPixmap(pixmap)
+    def set_background_picture(self, filename: Path):
+        self._bg_pic = QtGui.QPixmap(str(filename))
         self.resizeEvent()
 
+    def set_next(self, pixmap: QtGui.QPixmap):
+        self._pic = pixmap
+        self.resizeEvent()
+
+    def calc_margins(self, outside, inside):
+        left = (outside.width() - inside.width()) / 2
+        top = (outside.height() - inside.height()) / 2
+        right = outside.width() - (inside.width() + left)
+        bottom = outside.height() - (inside.height() + top)
+
+        return QtCore.QMargins(-left, -top, -right, -bottom)
+
     def resizeEvent(self, event=None):
-        if self._pixmap is not None:
-            viewport_size = self.size()
-            self._scene.setSceneRect(QtCore.QRectF(self._pixmap.rect()))
+        size = self.size()
+        if self._bg_pic:
+            scaled = self._bg_pic.scaled(
+                size,
+                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.SmoothTransformation,
+            )
+            self._bg_pic_label.setPixmap(scaled)
+            self._bg_pic_label.setContentsMargins(
+                self.calc_margins(size, scaled.size())
+            )
+        else:
+            self._bg_pic_label.setStyleSheet("QLabel { background-color: black }")
+        self._bg_pic_label.setGeometry(0, 0, size.width(), size.height())
 
-            horiz_zoom = viewport_size.width() / self._pixmap.width()
-            ver_zoom = viewport_size.height() / self._pixmap.height()
-            zoom_level = min(horiz_zoom, ver_zoom)
-
-            scale = zoom_level / self._zoom_level
-            self.scale(scale, scale)
-            self.centerOn(self._pixmap_item)
-            self._zoom_level = zoom_level
+        if self._pic:
+            self._pic_label.show()
+            scaled = self._pic.scaled(
+                size,
+                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.SmoothTransformation,
+            )
+            self._pic_label.setPixmap(scaled)
+            self._pic_label.setContentsMargins(self.calc_margins(size, scaled.size()))
+        else:
+            self._pic_label.hide()
+        self._pic_label.setGeometry(0, 0, size.width() * 0.9, size.height() * 0.9)
 
 
 class Slideshow(QtWidgets.QWidget):
@@ -81,12 +91,14 @@ class Slideshow(QtWidgets.QWidget):
         if self._timer is not None:
             self._timer.setInterval(pause_s * 1000)
 
+    def set_background_picture(self, filename: Path):
+        self._view.set_background_picture(filename)
+
     def set_pixmap(self, pixmap):
         self._view.set_next(pixmap)
 
     def _init_ui(self):
         self._view = PixmapView(self)
-        self.setStyleSheet(Styles.widget)
 
     def resizeEvent(self, event):
         size = self.size()
@@ -121,6 +133,9 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self.setFullScreen(self._is_fullscreen)
 
         QtCore.QMetaObject.connectSlotsByName(self)
+
+    def set_background_picture(self, filename: Path):
+        return self._slidesWidget.set_background_picture(filename)
 
     def setFullScreen(self, fullscreen: bool):
         self._is_fullscreen = fullscreen
@@ -290,6 +305,33 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self._timerbox.setLayout(self._layout1)
         self._layout.addWidget(self._timerbox)
 
+        # background config
+        self._backgroundbox = QtWidgets.QGroupBox("Hintergrund", self)
+        self._layout3 = QtWidgets.QFormLayout()
+        self._backgroundbox.setLayout(self._layout3)
+
+        # # filename
+        self._bg_widget = QtWidgets.QWidget(self)
+        self._bg_layout = QtWidgets.QHBoxLayout()
+        self._bg_fn_label = QtWidgets.QLineEdit("", self)
+        self._bg_fn_label.setEnabled(False)
+        self._bg_fn_label.setMinimumWidth(200)
+        self._bg_layout.addWidget(self._bg_fn_label)
+        self._bg_fn_button = QtWidgets.QPushButton(
+            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
+            "",
+            self,
+        )
+        self._bg_fn_button.clicked.connect(self.on_bg_fn_button_clicked)
+        self._bg_layout.addWidget(self._bg_fn_button)
+
+        self._bg_widget.setLayout(self._bg_layout)
+        self._layout3.addRow(
+            QtWidgets.QLabel("Datei:"),
+            self._bg_widget,
+        )
+        self._layout.addWidget(self._backgroundbox)
+
         # slideshow config
         self._slideshowbox = QtWidgets.QGroupBox("Diashow", self)
         self._layout2 = QtWidgets.QFormLayout()
@@ -302,9 +344,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self._dir_label.setMinimumWidth(200)
         self._dir_layout.addWidget(self._dir_label)
         self._dir_button = QtWidgets.QPushButton(
-            QtWidgets.QApplication.style().standardIcon(
-                QtWidgets.QStyle.SP_DirOpenIcon
-            ),
+            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DirIcon),
             "",
             self,
         )
@@ -341,6 +381,14 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self._gallery_window._timerWidget.show()
         else:
             self._gallery_window._timerWidget.hide()
+
+    def on_bg_fn_button_clicked(self):
+        (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
+        if choice:
+            bg_pic = Path(choice)
+            self._bg_fn_label.setText(choice)
+            self._gallery_window.set_background_picture(bg_pic)
+        pass
 
     def on_corner_button_clicked(self):
         number = int(self.sender().text())
