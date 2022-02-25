@@ -112,6 +112,8 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._slidesWidget = None
         self._is_fullscreen = False
         self._timerCorner = 3
+        self._timer_padding_x = 0
+        self._timer_padding_y = 0
         self._init_ui()
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
@@ -133,6 +135,14 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self.setFullScreen(self._is_fullscreen)
 
         QtCore.QMetaObject.connectSlotsByName(self)
+
+    def setTimerPaddingX(self, padding):
+        self._timer_padding_x = padding
+        self.resizeEvent()
+
+    def setTimerPaddingY(self, padding):
+        self._timer_padding_y = padding
+        self.resizeEvent()
 
     def set_background_picture(self, filename: Path):
         return self._slidesWidget.set_background_picture(filename)
@@ -181,36 +191,36 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
             lower_right_corner = self.size()
             if self._timerCorner == 1:
                 # Place timer in lower left corner
-                x = 0
-                y = lower_right_corner.height() - height
+                x = self._timer_padding_x
+                y = lower_right_corner.height() - height - self._timer_padding_y
             elif self._timerCorner == 2:
                 # Place timer in bottom center
                 x = (lower_right_corner.width() - width) / 2
-                y = lower_right_corner.height() - height
+                y = lower_right_corner.height() - height - self._timer_padding_y
             elif self._timerCorner == 3:
                 # Place timer in lower right corner
-                x = lower_right_corner.width() - width
-                y = lower_right_corner.height() - height
+                x = lower_right_corner.width() - width - self._timer_padding_x
+                y = lower_right_corner.height() - height - self._timer_padding_y
             elif self._timerCorner == 4:
                 # Place timer in left center
-                x = 0
+                x = self._timer_padding_x
                 y = (lower_right_corner.height() - height) / 2
             elif self._timerCorner == 6:
                 # Place timer in right center
-                x = lower_right_corner.width() - width
+                x = lower_right_corner.width() - width - self._timer_padding_x
                 y = (lower_right_corner.height() - height) / 2
             elif self._timerCorner == 7:
                 # Place timer in upper left corner
-                x = 0
-                y = 0
+                x = self._timer_padding_x
+                y = self._timer_padding_y
             elif self._timerCorner == 8:
                 # Place timer in upper center
                 x = (lower_right_corner.width() - width) / 2
-                y = 0
+                y = self._timer_padding_y
             elif self._timerCorner == 9:
                 # Place timer in upper right corner
-                x = lower_right_corner.width() - width
-                y = 0
+                x = lower_right_corner.width() - width - self._timer_padding_x
+                y = self._timer_padding_y
             self._timerWidget.setGeometry(x, y, width, height)
 
         # Make slides full screen
@@ -301,6 +311,48 @@ class GalleryConfigWindow(QtWidgets.QWidget):
 
         self._end_time_corner_widget.setLayout(self._end_time_corner_layout)
         self._layout1.addRow(self._end_time_corner_label, self._end_time_corner_widget)
+
+        # # corner padding x
+        self._padding_x_box = QtWidgets.QWidget(self)
+        self._layout4 = QtWidgets.QHBoxLayout()
+        self._padding_x_label = QtWidgets.QLabel(self)
+        self._padding_x_label.setText("0")
+        self._layout4.addWidget(self._padding_x_label)
+        self._padding_x_slider = QtWidgets.QSlider(self)
+        self._padding_x_slider.setMinimum(0)
+        self._padding_x_slider.setSingleStep(5)
+        self._padding_x_slider.setMaximum(100)
+        self._padding_x_slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self._padding_x_slider.valueChanged.connect(
+            lambda x: self._padding_x_label.setText(str(x))
+        )
+        self._padding_x_slider.valueChanged.connect(self.on_padding_x_value_changed)
+        self._layout4.addWidget(self._padding_x_slider)
+        self._padding_x_box.setLayout(self._layout4)
+        self._layout1.addRow(
+            QtWidgets.QLabel("Randabstand horizontal"), self._padding_x_box
+        )
+
+        # # corner padding y
+        self._padding_y_box = QtWidgets.QWidget(self)
+        self._layout5 = QtWidgets.QHBoxLayout()
+        self._padding_y_label = QtWidgets.QLabel(self)
+        self._padding_y_label.setText("0")
+        self._layout5.addWidget(self._padding_y_label)
+        self._padding_y_slider = QtWidgets.QSlider(self)
+        self._padding_y_slider.setMinimum(0)
+        self._padding_y_slider.setSingleStep(5)
+        self._padding_y_slider.setMaximum(100)
+        self._padding_y_slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self._padding_y_slider.valueChanged.connect(
+            lambda y: self._padding_y_label.setText(str(y))
+        )
+        self._padding_y_slider.valueChanged.connect(self.on_padding_y_value_changed)
+        self._layout5.addWidget(self._padding_y_slider)
+        self._padding_y_box.setLayout(self._layout5)
+        self._layout1.addRow(
+            QtWidgets.QLabel("Randabstand vertikal"), self._padding_y_box
+        )
 
         self._timerbox.setLayout(self._layout1)
         self._layout.addWidget(self._timerbox)
@@ -393,6 +445,14 @@ class GalleryConfigWindow(QtWidgets.QWidget):
     def on_corner_button_clicked(self):
         number = int(self.sender().text())
         self._gallery_window.setTimerCorner(number)
+
+    def on_padding_x_value_changed(self):
+        x = self._padding_x_slider.value()
+        self._gallery_window.setTimerPaddingX(x)
+
+    def on_padding_y_value_changed(self):
+        y = self._padding_y_slider.value()
+        self._gallery_window.setTimerPaddingY(y)
 
     def on_font_size_changed(self):
         try:
