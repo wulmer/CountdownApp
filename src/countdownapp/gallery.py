@@ -17,7 +17,6 @@ class PixmapView(QtWidgets.QWidget):
         self._bg_pic_label = QtWidgets.QLabel(self)
         self._pic = None
         self._pic_label = QtWidgets.QLabel(self)
-        self._pic_label.setStyleSheet("QLabel { background: black solid }")
 
     def set_background_picture(self, filename: Path):
         self._bg_pic = QtGui.QPixmap(str(filename))
@@ -87,10 +86,11 @@ class Slideshow(QtWidgets.QWidget):
 
     def start(self, folder: Path):
         self.images = [f for f in folder.iterdir() if f.suffix.lower() in IMG_SUFFIXES]
-        self.images.sort()
-        self._image_file = self.images[0]
-        self.show_next_image()
-        self._timer.start()
+        if self.images:
+            self.images.sort()
+            self._image_file = self.images[0]
+            self.show_next_image()
+            self._timer.start()
 
     def timerEvent(self):
         self.show_next_image()
