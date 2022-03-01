@@ -1,11 +1,22 @@
 import datetime
+import sys
 from pathlib import Path
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 from .timer import CountdownTimer
 
 IMG_SUFFIXES = {".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".png"}
+
+
+def resource_path(relative_path: str) -> Path:
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = Path(sys._MEIPASS)
+    except Exception:
+        base_path = Path(".")
+
+    return base_path.joinpath(relative_path)
 
 
 class PixmapView(QtWidgets.QWidget):
@@ -55,10 +66,14 @@ class PixmapView(QtWidgets.QWidget):
             self._bg_pic_label.setStyleSheet("QLabel { background-color: black }")
         self._bg_pic_label.setGeometry(0, 0, size.width(), size.height())
 
-        p = self._slideshow_paddings
-        slides_size = QtCore.QSize(
-            size.width() - (p[1] + p[3]), size.height() - (p[0] + p[2])
-        )
+        p = self._slideshow_paddings.copy()
+        w = size.width()
+        h = size.height()
+        p[0] = p[0] / 100 * h
+        p[1] = p[1] / 100 * w
+        p[2] = p[2] / 100 * h
+        p[3] = p[3] / 100 * w
+        slides_size = QtCore.QSize(w - (p[1] + p[3]), h - (p[0] + p[2]))
         if self._pic:
             self._pic_label.show()
             scaled = self._pic.scaled(
@@ -205,6 +220,9 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._timerCorner = corner
         self.resizeEvent()
 
+    def setTimerFont(self, font: QtGui.QFont):
+        self._timerWidget.setFont(font)
+
     def setTimerFontSize(self, size: int):
         self._timerWidget.setFontSize(size)
         self.resizeEvent()
@@ -273,196 +291,8 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         super().__init__()
         self._gallery_window = gallery_window
         self._timer_color = QtGui.QColor("white")
+        uic.loadUi(resource_path("config.ui"), self)
         self._init_ui()
-
-    def _init_ui(self):
-        self.setWindowTitle("Countdown Gallery Configuration")
-
-        # layout
-        self._layout = QtWidgets.QVBoxLayout(self)
-
-        # timer config
-        self._timerbox = QtWidgets.QGroupBox("Timer", self)
-        self._layout1 = QtWidgets.QFormLayout()
-
-        # # timer visible
-        self._visible_timer_cb = QtWidgets.QCheckBox(self)
-        self._visible_timer_cb.setChecked(True)
-        self._visible_timer_cb.stateChanged.connect(self.on_timer_visible_cb_changed)
-        self._layout1.addRow(
-            QtWidgets.QLabel("Sichtbar:", self), self._visible_timer_cb
-        )
-
-        # # end_time
-        self._end_time_label = QtWidgets.QLabel("Endzeitpunkt [hh:mm:ss]:", self)
-        self._end_time_input = QtWidgets.QLineEdit("10:00:00", self)
-        self._end_time_input.editingFinished.connect(self.on_end_time_changed)
-        self._layout1.addRow(self._end_time_label, self._end_time_input)
-
-        # # font size
-        self._font_size_input = QtWidgets.QLineEdit("180")
-        self._font_size_input.editingFinished.connect(self.on_font_size_changed)
-        self._layout1.addRow(
-            QtWidgets.QLabel("Schriftgröße [pt]:"), self._font_size_input
-        )
-
-        # # timer color
-        self._font_color_button = QtWidgets.QPushButton()
-        self._font_color_button.setStyleSheet(
-            f"QPushButton {{background-color: {self._timer_color.name()}}}"
-        )
-        self._font_color_button.clicked.connect(self.on_font_color_button_clicked)
-        self._layout1.addRow(QtWidgets.QLabel("Schriftfarbe:"), self._font_color_button)
-
-        # # corner
-        self._end_time_corner_label = QtWidgets.QLabel("Bildschirmecke:", self)
-        self._end_time_corner_widget = QtWidgets.QWidget(self)
-        self._end_time_corner_layout = QtWidgets.QGridLayout()
-
-        # # #
-        corner_button_pos = {
-            1: (2, 0),
-            2: (2, 1),
-            3: (2, 2),
-            4: (1, 0),
-            6: (1, 2),
-            7: (0, 0),
-            8: (0, 1),
-            9: (0, 2),
-        }
-        corner_buttons = {}
-        for number in corner_button_pos:
-            button = QtWidgets.QPushButton(str(number), self)
-            pos = corner_button_pos[number]
-            self._end_time_corner_layout.addWidget(
-                button,
-                pos[0],
-                pos[1],
-            )
-            button.clicked.connect(self.on_corner_button_clicked)
-            corner_buttons[number] = button
-
-        self._end_time_corner_widget.setLayout(self._end_time_corner_layout)
-        self._layout1.addRow(self._end_time_corner_label, self._end_time_corner_widget)
-
-        # # corner padding x
-        self._padding_x_box = QtWidgets.QWidget(self)
-        self._layout4 = QtWidgets.QHBoxLayout()
-        self._padding_x_label = QtWidgets.QLabel(self)
-        self._padding_x_label.setText("0")
-        self._layout4.addWidget(self._padding_x_label)
-        self._padding_x_slider = QtWidgets.QSlider(self)
-        self._padding_x_slider.setMinimum(0)
-        self._padding_x_slider.setSingleStep(5)
-        self._padding_x_slider.setMaximum(100)
-        self._padding_x_slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self._padding_x_slider.valueChanged.connect(
-            lambda x: self._padding_x_label.setText(str(x))
-        )
-        self._padding_x_slider.valueChanged.connect(self.on_padding_x_value_changed)
-        self._layout4.addWidget(self._padding_x_slider)
-        self._padding_x_box.setLayout(self._layout4)
-        self._layout1.addRow(
-            QtWidgets.QLabel("Randabstand horizontal"), self._padding_x_box
-        )
-
-        # # corner padding y
-        self._padding_y_box = QtWidgets.QWidget(self)
-        self._layout5 = QtWidgets.QHBoxLayout()
-        self._padding_y_label = QtWidgets.QLabel(self)
-        self._padding_y_label.setText("0")
-        self._layout5.addWidget(self._padding_y_label)
-        self._padding_y_slider = QtWidgets.QSlider(self)
-        self._padding_y_slider.setMinimum(0)
-        self._padding_y_slider.setSingleStep(5)
-        self._padding_y_slider.setMaximum(100)
-        self._padding_y_slider.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self._padding_y_slider.valueChanged.connect(
-            lambda y: self._padding_y_label.setText(str(y))
-        )
-        self._padding_y_slider.valueChanged.connect(self.on_padding_y_value_changed)
-        self._layout5.addWidget(self._padding_y_slider)
-        self._padding_y_box.setLayout(self._layout5)
-        self._layout1.addRow(
-            QtWidgets.QLabel("Randabstand vertikal"), self._padding_y_box
-        )
-
-        self._timerbox.setLayout(self._layout1)
-        self._layout.addWidget(self._timerbox)
-
-        # background config
-        self._backgroundbox = QtWidgets.QGroupBox("Hintergrund", self)
-        self._layout3 = QtWidgets.QFormLayout()
-        self._backgroundbox.setLayout(self._layout3)
-
-        # # filename
-        self._bg_widget = QtWidgets.QWidget(self)
-        self._bg_layout = QtWidgets.QHBoxLayout()
-        self._bg_fn_label = QtWidgets.QLineEdit("./Hintergrundbild.png", self)
-        self._bg_fn_label.setEnabled(False)
-        self._bg_fn_label.setMinimumWidth(200)
-        self._bg_layout.addWidget(self._bg_fn_label)
-        self._bg_fn_button = QtWidgets.QPushButton(
-            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
-            "",
-            self,
-        )
-        self._bg_fn_button.clicked.connect(self.on_bg_fn_button_clicked)
-        self._bg_layout.addWidget(self._bg_fn_button)
-
-        self._bg_widget.setLayout(self._bg_layout)
-        self._layout3.addRow(
-            QtWidgets.QLabel("Datei:"),
-            self._bg_widget,
-        )
-        self._layout.addWidget(self._backgroundbox)
-
-        # slideshow config
-        self._slideshowbox = QtWidgets.QGroupBox("Diashow", self)
-        self._layout2 = QtWidgets.QFormLayout()
-
-        # # directory
-        self._dir_widget = QtWidgets.QWidget(self)
-        self._dir_layout = QtWidgets.QHBoxLayout()
-        self._dir_label = QtWidgets.QLineEdit("", self)
-        self._dir_label.setEnabled(False)
-        self._dir_label.setMinimumWidth(200)
-        self._dir_layout.addWidget(self._dir_label)
-        self._dir_button = QtWidgets.QPushButton(
-            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DirIcon),
-            "",
-            self,
-        )
-        self._dir_button.clicked.connect(self.on_dir_button_clicked)
-        self._dir_layout.addWidget(self._dir_button)
-        self._layout2.addRow(
-            QtWidgets.QLabel("Verzeichnis mit Bildern:"),
-            self._dir_widget,
-        )
-        self._dir_widget.setLayout(self._dir_layout)
-
-        # # slideshow pause
-        self._pause_input = QtWidgets.QLineEdit("5", self)
-        self._pause_input.editingFinished.connect(self.on_pause_changed)
-        self._layout2.addRow(
-            QtWidgets.QLabel("Pause zw. Bildern [s]:"), self._pause_input
-        )
-
-        # # slideshow padding
-        self._slideshow_paddings = QtWidgets.QLineEdit("100 700 100 50", self)
-        self._slideshow_paddings.editingFinished.connect(
-            self.on_slideshow_padding_changed
-        )
-        self._layout2.addRow(
-            QtWidgets.QLabel("Rand (oben rechts unten links)"),
-            self._slideshow_paddings,
-        )
-
-        self._slideshowbox.setLayout(self._layout2)
-        self._layout.addWidget(self._slideshowbox)
-
-        self.setLayout(self._layout)
-        QtCore.QMetaObject.connectSlotsByName(self)
 
         # initialize app with config dialog values
         self._padding_x_slider.setValue(20)
@@ -471,10 +301,50 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self.on_pause_changed()
         self.on_timer_visible_cb_changed()
         self.on_font_size_changed()
+        self.on_font_select_changed(self._font_select.currentText())
         self.on_padding_x_value_changed()
         self.on_padding_y_value_changed()
         self.on_slideshow_padding_changed()
-        # self.on_dir_button_clicked()
+
+        self.show()
+
+    def _init_ui(self):
+        self._visible_timer_cb.stateChanged.connect(self.on_timer_visible_cb_changed)
+        self._end_time_input.editingFinished.connect(self.on_end_time_changed)
+        self._font_size_input.editingFinished.connect(self.on_font_size_changed)
+        self._font_select.currentTextChanged.connect(self.on_font_select_changed)
+
+        self._font_color_button.setStyleSheet(
+            f"QPushButton {{background-color: {self._timer_color.name()}}}"
+        )
+        self._font_color_button.clicked.connect(self.on_font_color_button_clicked)
+        self._corner_1_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_2_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_3_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_4_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_6_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_7_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_8_button.clicked.connect(self.on_corner_button_clicked)
+        self._corner_9_button.clicked.connect(self.on_corner_button_clicked)
+
+        self._padding_x_slider.valueChanged.connect(self.on_padding_x_value_changed)
+        self._padding_y_slider.valueChanged.connect(self.on_padding_y_value_changed)
+
+        self._bg_fn_button.setIcon(
+            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
+        )
+        self._bg_fn_button.clicked.connect(self.on_bg_fn_button_clicked)
+
+        self._dir_button.setIcon(
+            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DirIcon),
+        )
+        self._dir_button.clicked.connect(self.on_dir_button_clicked)
+
+        self._pause_input.editingFinished.connect(self.on_pause_changed)
+
+        self._slideshow_paddings.editingFinished.connect(
+            self.on_slideshow_padding_changed
+        )
 
     def on_timer_visible_cb_changed(self):
         if self._visible_timer_cb.isChecked():
@@ -508,6 +378,13 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         except ValueError:
             return
         self._gallery_window.setTimerFontSize(font_size)
+
+    def on_font_select_changed(self, text: str):
+        try:
+            new_font = QtGui.QFont(text, int(self._font_size_input.text()))
+        except:
+            new_font = QtGui.QFont()
+        self._gallery_window.setTimerFont(new_font)
 
     def on_font_color_button_clicked(self):
         color = QtWidgets.QColorDialog.getColor(self._timer_color)
