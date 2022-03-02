@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>472</width>
-    <height>569</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -202,16 +202,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QFontComboBox" name="_font_select">
-        <property name="fontFilters">
-         <set>QFontComboBox::ScalableFonts</set>
-        </property>
-        <property name="currentFont">
-         <font>
-          <family>Verdana</family>
-         </font>
-        </property>
-       </widget>
+       <widget class="QFontComboBox" name="_font_select"/>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_11">
@@ -364,6 +355,29 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>_visible_timer_cb</tabstop>
+  <tabstop>_end_time_input</tabstop>
+  <tabstop>_font_select</tabstop>
+  <tabstop>_font_size_input</tabstop>
+  <tabstop>_font_color_button</tabstop>
+  <tabstop>_corner_7_button</tabstop>
+  <tabstop>_corner_8_button</tabstop>
+  <tabstop>_corner_9_button</tabstop>
+  <tabstop>_corner_4_button</tabstop>
+  <tabstop>_corner_6_button</tabstop>
+  <tabstop>_corner_1_button</tabstop>
+  <tabstop>_corner_2_button</tabstop>
+  <tabstop>_corner_3_button</tabstop>
+  <tabstop>_padding_x_slider</tabstop>
+  <tabstop>_padding_y_slider</tabstop>
+  <tabstop>_bg_fn_label</tabstop>
+  <tabstop>_bg_fn_button</tabstop>
+  <tabstop>_dir_label</tabstop>
+  <tabstop>_dir_button</tabstop>
+  <tabstop>_pause_input</tabstop>
+  <tabstop>_slideshow_paddings</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
