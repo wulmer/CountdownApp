@@ -63,7 +63,7 @@ class PixmapView(QtWidgets.QWidget):
                 self.calc_margins(size, scaled.size())
             )
         else:
-            self._bg_pic_label.setStyleSheet("QLabel { background-color: black }")
+            self._bg_pic_label.setStyleSheet("background-color: black")
         self._bg_pic_label.setGeometry(0, 0, size.width(), size.height())
 
         p = self._slideshow_paddings.copy()
@@ -142,14 +142,12 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._slidesWidget = None
         self._is_fullscreen = False
         self._timerCorner = 3
-        self._timer_padding_x = 0
-        self._timer_padding_y = 0
         self._init_ui()
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
 
     def _init_ui(self):
-        self.setWindowTitle("Countdown Gallery")
+        self.setWindowTitle("Countdown Galerie")
         self.resize(800, 700)
 
         # central widget
@@ -167,7 +165,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._shortcut_help_label.setText("f = Vollbild\nq = Beenden\n")
         self._shortcut_help_label.adjustSize()
         self._shortcut_help_label.setStyleSheet(
-            "QLabel { color: white; background-color: rgba(0,0,0,10) }"
+            "color: white; background-color: rgba(0,0,0,10)"
         )
 
         self.setFullScreen(self._is_fullscreen)
@@ -175,12 +173,10 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def setTimerPaddingX(self, padding):
-        self._timer_padding_x = padding
-        self.resizeEvent()
+        self._timerWidget.setPaddingX(padding)
 
     def setTimerPaddingY(self, padding):
-        self._timer_padding_y = padding
-        self.resizeEvent()
+        self._timerWidget.setPaddingY(padding)
 
     def set_background_picture(self, filename: Path):
         return self._slidesWidget.set_background_picture(filename)
@@ -228,55 +224,67 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self.resizeEvent()
 
     def resizeEvent(self, event=None):
+        size = self.size()
+        width = size.width()
+        height = size.height()
         if self._timerWidget is not None:
-            width = self._timerWidget.width()
-            height = self._timerWidget.height()
-            lower_right_corner = self.size()
             if self._timerCorner == 1:
                 # Place timer in lower left corner
-                x = self._timer_padding_x
-                y = lower_right_corner.height() - height - self._timer_padding_y
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignLeft
+                    | QtCore.Qt.AlignmentFlag.AlignBottom
+                )
             elif self._timerCorner == 2:
                 # Place timer in bottom center
-                x = (lower_right_corner.width() - width) / 2
-                y = lower_right_corner.height() - height - self._timer_padding_y
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignHCenter
+                    | QtCore.Qt.AlignmentFlag.AlignBottom
+                )
             elif self._timerCorner == 3:
                 # Place timer in lower right corner
-                x = lower_right_corner.width() - width - self._timer_padding_x
-                y = lower_right_corner.height() - height - self._timer_padding_y
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignRight
+                    | QtCore.Qt.AlignmentFlag.AlignBottom
+                )
             elif self._timerCorner == 4:
                 # Place timer in left center
-                x = self._timer_padding_x
-                y = (lower_right_corner.height() - height) / 2
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignLeft
+                    | QtCore.Qt.AlignmentFlag.AlignVCenter
+                )
             elif self._timerCorner == 6:
                 # Place timer in right center
-                x = lower_right_corner.width() - width - self._timer_padding_x
-                y = (lower_right_corner.height() - height) / 2
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignRight
+                    | QtCore.Qt.AlignmentFlag.AlignVCenter
+                )
             elif self._timerCorner == 7:
                 # Place timer in upper left corner
-                x = self._timer_padding_x
-                y = self._timer_padding_y
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop
+                )
             elif self._timerCorner == 8:
                 # Place timer in upper center
-                x = (lower_right_corner.width() - width) / 2
-                y = self._timer_padding_y
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignHCenter
+                    | QtCore.Qt.AlignmentFlag.AlignTop
+                )
             elif self._timerCorner == 9:
                 # Place timer in upper right corner
-                x = lower_right_corner.width() - width - self._timer_padding_x
-                y = self._timer_padding_y
-            self._timerWidget.setGeometry(x, y, width, height)
+                self._timerWidget.setAlignment(
+                    QtCore.Qt.AlignmentFlag.AlignRight
+                    | QtCore.Qt.AlignmentFlag.AlignTop
+                )
+            self._timerWidget.setGeometry(0, 0, width, height)
 
         # Make slides full screen
-        self._slidesWidget.setGeometry(
-            0, 0, lower_right_corner.width(), lower_right_corner.height()
-        )
+        self._slidesWidget.setGeometry(0, 0, width, height)
 
         # Shortcuts
-        size = self.size()
         lbl_size = self._shortcut_help_label.size()
         self._shortcut_help_label.move(
-            (size.width() - lbl_size.width()) / 2,
-            (size.height() - lbl_size.height()) / 2,
+            (width - lbl_size.width()) / 2,
+            (height - lbl_size.height()) / 2,
         )
 
     def closeEvent(self, event):
@@ -300,8 +308,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         self.on_end_time_changed()
         self.on_pause_changed()
         self.on_timer_visible_cb_changed()
-        self.on_font_size_changed()
-        self.on_font_select_changed(self._font_select.currentText())
+        self.on_font_changed()
         self.on_padding_x_value_changed()
         self.on_padding_y_value_changed()
         self.on_slideshow_padding_changed()
@@ -311,11 +318,11 @@ class GalleryConfigWindow(QtWidgets.QWidget):
     def _init_ui(self):
         self._visible_timer_cb.stateChanged.connect(self.on_timer_visible_cb_changed)
         self._end_time_input.editingFinished.connect(self.on_end_time_changed)
-        self._font_size_input.editingFinished.connect(self.on_font_size_changed)
-        self._font_select.currentTextChanged.connect(self.on_font_select_changed)
+        self._font_size_input.editingFinished.connect(self.on_font_changed)
+        self._font_select.currentTextChanged.connect(self.on_font_changed)
 
         self._font_color_button.setStyleSheet(
-            f"QPushButton {{background-color: {self._timer_color.name()}}}"
+            f"background-color: {self._timer_color.name()}"
         )
         self._font_color_button.clicked.connect(self.on_font_color_button_clicked)
         self._corner_1_button.clicked.connect(self.on_corner_button_clicked)
@@ -372,25 +379,20 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         y = self._padding_y_slider.value()
         self._gallery_window.setTimerPaddingY(y)
 
-    def on_font_size_changed(self):
+    def on_font_changed(self):
         try:
             font_size = int(self._font_size_input.text())
         except ValueError:
-            return
-        self._gallery_window.setTimerFontSize(font_size)
-
-    def on_font_select_changed(self, text: str):
-        try:
-            new_font = QtGui.QFont(text, int(self._font_size_input.text()))
-        except:
-            new_font = QtGui.QFont()
-        self._gallery_window.setTimerFont(new_font)
+            font_size = 10
+        font_name = self._font_select.currentText()
+        font = QtGui.QFont(font_name, font_size)
+        self._gallery_window.setTimerFont(font)
 
     def on_font_color_button_clicked(self):
         color = QtWidgets.QColorDialog.getColor(self._timer_color)
         self._timer_color = color
         self._font_color_button.setStyleSheet(
-            f"QPushButton {{background-color: {self._timer_color.name()}}}"
+            f"background-color: {self._timer_color.name()}"
         )
         self._gallery_window._timerWidget.setFontColor(self._timer_color)
 
