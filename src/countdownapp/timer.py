@@ -7,6 +7,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class CountdownTimer(QtWidgets.QLabel):
+    finished = QtCore.pyqtSignal()
+
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
         self._end_time: Optional[datetime.datetime] = None
@@ -48,6 +50,7 @@ class CountdownTimer(QtWidgets.QLabel):
     def stop(self):
         self._active = False
         self.setText("")
+        self.finished.emit()
 
     def _run(self):
         while self._active:

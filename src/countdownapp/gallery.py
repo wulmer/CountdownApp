@@ -38,6 +38,10 @@ class PixmapView(QtWidgets.QWidget):
         self._pic = pixmap
         self.resizeEvent()
 
+    def clear(self):
+        self._pic = None
+        self.resizeEvent()
+
     def calc_margins(self, outside, inside):
         left = (outside.width() - inside.width()) / 2
         top = (outside.height() - inside.height()) / 2
@@ -108,6 +112,10 @@ class Slideshow(QtWidgets.QWidget):
             self.show_next_image()
             self._timer.start()
 
+    def stop(self):
+        self._timer.stop()
+        self._view.clear()
+
     def timerEvent(self):
         self.show_next_image()
 
@@ -144,7 +152,9 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._is_fullscreen = False
         self._timerCorner = 3
         self._music_player = QtMultimedia.QMediaPlayer()
+        self._auto_quit = True
         self._init_ui()
+        self._timerWidget.finished.connect(self._on_timer_finished)
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
 
@@ -179,7 +189,6 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         if mp.isAudioAvailable():
             duration = mp.duration()
             seek_time = duration - diff_seconds * 1000
-            print(seek_time)
             mp.setPosition(seek_time)
 
     def setTimerPaddingX(self, padding):
@@ -297,6 +306,12 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
             (height - lbl_size.height()) / 2,
         )
 
+    @QtCore.pyqtSlot()
+    def _on_timer_finished(self):
+        self._slidesWidget.stop()
+        if self._auto_quit:
+            self.close()
+
     def closeEvent(self, event):
         if self._timerWidget is not None:
             self._timerWidget._active = False
@@ -373,7 +388,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def on_auto_quit_cb_changed(self):
-        pass
+        self._gallery_window._auto_quit = self._auto_quit_cb.isChecked()
 
     @QtCore.pyqtSlot()
     def on_timer_visible_cb_changed(self):
