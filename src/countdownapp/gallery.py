@@ -1,8 +1,9 @@
 import datetime
 import sys
 from pathlib import Path
+from typing import Optional
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets, uic
 
 from .timer import CountdownTimer
 
@@ -24,9 +25,9 @@ class PixmapView(QtWidgets.QWidget):
         super().__init__(parent)
 
         self._slideshow_paddings = [0, 0, 0, 0]
-        self._bg_pic = None
+        self._bg_pic: Optional[QtGui.QPixmap] = None
         self._bg_pic_label = QtWidgets.QLabel(self)
-        self._pic = None
+        self._pic: Optional[QtGui.QPixmap] = None
         self._pic_label = QtWidgets.QLabel(self)
 
     def set_background_picture(self, filename: Path):
@@ -142,6 +143,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._slidesWidget = None
         self._is_fullscreen = False
         self._timerCorner = 3
+        self._music_player = QtMultimedia.QMediaPlayer()
         self._init_ui()
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
@@ -171,6 +173,14 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self.setFullScreen(self._is_fullscreen)
 
         QtCore.QMetaObject.connectSlotsByName(self)
+
+    def setRemainingMusicTime(self, diff_seconds):
+        mp = self._music_player
+        if mp.isAudioAvailable():
+            duration = mp.duration()
+            seek_time = duration - diff_seconds * 1000
+            print(seek_time)
+            mp.setPosition(seek_time)
 
     def setTimerPaddingX(self, padding):
         self._timerWidget.setPaddingX(padding)
@@ -336,6 +346,14 @@ class GalleryConfigWindow(QtWidgets.QWidget):
 
         self._padding_x_slider.valueChanged.connect(self.on_padding_x_value_changed)
         self._padding_y_slider.valueChanged.connect(self.on_padding_y_value_changed)
+        self._auto_quit_cb.stateChanged.connect(self.on_auto_quit_cb_changed)
+
+        self._music_fn_button.setIcon(
+            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
+        )
+        self._music_fn_button.clicked.connect(self.on_music_fn_button_clicked)
+        self._music_play_button.clicked.connect(self.on_music_play_button_clicked)
+        self._music_stop_button.clicked.connect(self.on_music_stop_button_clicked)
 
         self._bg_fn_button.setIcon(
             QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
@@ -353,32 +371,59 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self.on_slideshow_padding_changed
         )
 
+    @QtCore.pyqtSlot()
+    def on_auto_quit_cb_changed(self):
+        pass
+
+    @QtCore.pyqtSlot()
     def on_timer_visible_cb_changed(self):
         if self._visible_timer_cb.isChecked():
             self._gallery_window._timerWidget.show()
         else:
             self._gallery_window._timerWidget.hide()
 
+    @QtCore.pyqtSlot()
+    def on_music_fn_button_clicked(self):
+        (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
+        if choice:
+            self._music_fn_label.setText(choice)
+
+    @QtCore.pyqtSlot()
+    def on_music_play_button_clicked(self):
+        music_file = Path(self._music_fn_label.text())
+        self._gallery_window._music_player.setMedia(
+            QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(str(music_file)))
+        )
+        self._gallery_window._music_player.play()
+
+    @QtCore.pyqtSlot()
+    def on_music_stop_button_clicked(self):
+        self._gallery_window._music_player.stop()
+
+    @QtCore.pyqtSlot()
     def on_bg_fn_button_clicked(self):
         (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
         if choice:
             bg_pic = Path(choice)
             self._bg_fn_label.setText(choice)
             self._gallery_window.set_background_picture(bg_pic)
-        pass
 
+    @QtCore.pyqtSlot()
     def on_corner_button_clicked(self):
         number = int(self.sender().text())
         self._gallery_window.setTimerCorner(number)
 
+    @QtCore.pyqtSlot()
     def on_padding_x_value_changed(self):
         x = self._padding_x_slider.value()
         self._gallery_window.setTimerPaddingX(x)
 
+    @QtCore.pyqtSlot()
     def on_padding_y_value_changed(self):
         y = self._padding_y_slider.value()
         self._gallery_window.setTimerPaddingY(y)
 
+    @QtCore.pyqtSlot()
     def on_font_changed(self):
         try:
             font_size = int(self._font_size_input.text())
@@ -388,6 +433,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         font = QtGui.QFont(font_name, font_size)
         self._gallery_window.setTimerFont(font)
 
+    @QtCore.pyqtSlot()
     def on_font_color_button_clicked(self):
         color = QtWidgets.QColorDialog.getColor(self._timer_color)
         self._timer_color = color
@@ -396,6 +442,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         )
         self._gallery_window._timerWidget.setFontColor(self._timer_color)
 
+    @QtCore.pyqtSlot()
     def on_dir_button_clicked(self):
         choice = QtWidgets.QFileDialog.getExistingDirectory(parent=self)
         if choice:
@@ -404,6 +451,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self.on_pause_changed()
             self._gallery_window._slidesWidget.start(folder)
 
+    @QtCore.pyqtSlot()
     def on_slideshow_padding_changed(self):
         padding = self._slideshow_paddings.text()
         try:
@@ -413,6 +461,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             padding_values = [0, 0, 0, 0]
         self._gallery_window._slidesWidget._view.setSlideShowPaddings(padding_values)
 
+    @QtCore.pyqtSlot()
     def on_end_time_changed(self):
         text = self._end_time_input.text()
         try:
@@ -423,10 +472,12 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             diff_seconds = (end_time - current_time).total_seconds()
             if diff_seconds < 0:
                 end_time = end_time + datetime.timedelta(days=1)
+            self._gallery_window.setRemainingMusicTime(diff_seconds)
             self._gallery_window._timerWidget.start(end_time)
         except ValueError:
             self._gallery_window._timerWidget.stop()
 
+    @QtCore.pyqtSlot()
     def on_pause_changed(self):
         text = self._pause_input.text()
         try:
