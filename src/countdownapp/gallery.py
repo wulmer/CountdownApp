@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets, uic
+from PyQt5 import QtCore, QtGui, QtMultimedia, QtMultimediaWidgets, QtWidgets, uic
 
 from .timer import CountdownTimer
 
@@ -149,12 +149,13 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         super().__init__()
         self._timerWidget = None
         self._slidesWidget = None
+        self._video_widget = None
+        self._shortcut_help_label = None
         self._is_fullscreen = False
         self._timerCorner = 3
         self._music_player = QtMultimedia.QMediaPlayer()
         self._auto_quit = True
         self._init_ui()
-        self._timerWidget.finished.connect(self._on_timer_finished)
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
 
@@ -162,15 +163,19 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Countdown Galerie")
         self.resize(800, 700)
 
-        # central widget
+        # central stacked widget
+        self._stacked_widget = QtWidgets.QStackedWidget()
+        self.setCentralWidget(self._stacked_widget)
+
+        # central widget with slideshow and countdown
         self._widget = QtWidgets.QFrame()
-        self.setCentralWidget(self._widget)
 
         # create slideshow
         self._slidesWidget = Slideshow(self._widget)
 
         # create timer
         self._timerWidget = CountdownTimer(self._widget)
+        self._timerWidget.finished.connect(self._on_timer_finished)
 
         # create keyboard hint
         self._shortcut_help_label = QtWidgets.QLabel(self)
@@ -179,6 +184,29 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._shortcut_help_label.setStyleSheet(
             "color: white; background-color: rgba(0,0,0,10)"
         )
+
+        self._stacked_widget.addWidget(self._widget)
+
+        # central video player widget
+        self._video_widget = QtMultimediaWidgets.QVideoWidget(self._widget)
+        self._video_widget.hide()
+        self._video_widget.lower()
+
+        self._video_player = QtMultimedia.QMediaPlayer(
+            None, QtMultimedia.QMediaPlayer.VideoSurface
+        )
+        self._video_player.error.connect(lambda x: print(x))
+        self._video_player.setVideoOutput(self._video_widget)
+        self._video_player.stateChanged[QtMultimedia.QMediaPlayer.State].connect(
+            self._on_video_state_changed
+        )
+        self._video_player.mediaStatusChanged[
+            QtMultimedia.QMediaPlayer.MediaStatus
+        ].connect(self._media_status_changed)
+
+        self._stacked_widget.addWidget(self._video_widget)
+
+        self._stacked_widget.setCurrentWidget(self._widget)
 
         self.setFullScreen(self._is_fullscreen)
 
@@ -198,6 +226,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         self._timerWidget.setPaddingY(padding)
 
     def set_background_picture(self, filename: Path):
+        self._slidesWidget.show()
         return self._slidesWidget.set_background_picture(filename)
 
     def setFullScreen(self, fullscreen: bool):
@@ -306,11 +335,31 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
             (height - lbl_size.height()) / 2,
         )
 
-    @QtCore.pyqtSlot()
+        # Video
+        self._video_widget.setGeometry(0, 0, width, height)
+
+    def _media_status_changed(self, status):
+        print(status)
+
+    def _on_video_state_changed(self, state):
+        print(state)
+        if state == QtMultimedia.QMediaPlayer.State.StoppedState:
+            if self._auto_quit:
+                self.close()
+
     def _on_timer_finished(self):
         self._slidesWidget.stop()
-        if self._auto_quit:
-            self.close()
+        video_file = self._config_window._vid_fn_label.text()
+        if video_file:
+            self._stacked_widget.setCurrentWidget(self._video_widget)
+            self._video_player.setMedia(
+                QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(video_file))
+            )
+            self._video_player.play()
+        else:
+            # no video, check if auto quit
+            if self._auto_quit:
+                self.close()
 
     def closeEvent(self, event):
         if self._timerWidget is not None:
@@ -386,24 +435,27 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self.on_slideshow_padding_changed
         )
 
-    @QtCore.pyqtSlot()
+        self._vid_fn_button.clicked.connect(self.on_vid_fn_button_clicked)
+
     def on_auto_quit_cb_changed(self):
         self._gallery_window._auto_quit = self._auto_quit_cb.isChecked()
 
-    @QtCore.pyqtSlot()
     def on_timer_visible_cb_changed(self):
         if self._visible_timer_cb.isChecked():
             self._gallery_window._timerWidget.show()
         else:
             self._gallery_window._timerWidget.hide()
 
-    @QtCore.pyqtSlot()
+    def on_vid_fn_button_clicked(self):
+        (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
+        if choice:
+            self._vid_fn_label.setText(choice)
+
     def on_music_fn_button_clicked(self):
         (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
         if choice:
             self._music_fn_label.setText(choice)
 
-    @QtCore.pyqtSlot()
     def on_music_play_button_clicked(self):
         music_file = Path(self._music_fn_label.text())
         self._gallery_window._music_player.setMedia(
@@ -411,11 +463,9 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         )
         self._gallery_window._music_player.play()
 
-    @QtCore.pyqtSlot()
     def on_music_stop_button_clicked(self):
         self._gallery_window._music_player.stop()
 
-    @QtCore.pyqtSlot()
     def on_bg_fn_button_clicked(self):
         (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
         if choice:
@@ -423,22 +473,18 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self._bg_fn_label.setText(choice)
             self._gallery_window.set_background_picture(bg_pic)
 
-    @QtCore.pyqtSlot()
     def on_corner_button_clicked(self):
         number = int(self.sender().text())
         self._gallery_window.setTimerCorner(number)
 
-    @QtCore.pyqtSlot()
     def on_padding_x_value_changed(self):
         x = self._padding_x_slider.value()
         self._gallery_window.setTimerPaddingX(x)
 
-    @QtCore.pyqtSlot()
     def on_padding_y_value_changed(self):
         y = self._padding_y_slider.value()
         self._gallery_window.setTimerPaddingY(y)
 
-    @QtCore.pyqtSlot()
     def on_font_changed(self):
         try:
             font_size = int(self._font_size_input.text())
@@ -448,7 +494,6 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         font = QtGui.QFont(font_name, font_size)
         self._gallery_window.setTimerFont(font)
 
-    @QtCore.pyqtSlot()
     def on_font_color_button_clicked(self):
         color = QtWidgets.QColorDialog.getColor(self._timer_color)
         self._timer_color = color
@@ -457,7 +502,6 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         )
         self._gallery_window._timerWidget.setFontColor(self._timer_color)
 
-    @QtCore.pyqtSlot()
     def on_dir_button_clicked(self):
         choice = QtWidgets.QFileDialog.getExistingDirectory(parent=self)
         if choice:
@@ -465,8 +509,8 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self._dir_label.setText(choice)
             self.on_pause_changed()
             self._gallery_window._slidesWidget.start(folder)
+            self._gallery_window._slidesWidget.show()
 
-    @QtCore.pyqtSlot()
     def on_slideshow_padding_changed(self):
         padding = self._slideshow_paddings.text()
         try:
@@ -476,7 +520,6 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             padding_values = [0, 0, 0, 0]
         self._gallery_window._slidesWidget._view.setSlideShowPaddings(padding_values)
 
-    @QtCore.pyqtSlot()
     def on_end_time_changed(self):
         text = self._end_time_input.text()
         try:
@@ -492,14 +535,15 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         except ValueError:
             self._gallery_window._timerWidget.stop()
 
-    @QtCore.pyqtSlot()
     def on_pause_changed(self):
         text = self._pause_input.text()
         try:
             pause_s = int(text)
             self._gallery_window._slidesWidget.set_pause(pause_s)
+            self._gallery_window._slidesWidget.show()
         except ValueError:
             self._gallery_window._slidesWidget.set_pause(99999)
+            self._gallery_window._slidesWidget.show()
 
     def closeEvent(self, event):
         self._gallery_window.close()
