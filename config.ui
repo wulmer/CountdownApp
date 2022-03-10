@@ -7,13 +7,80 @@
     <x>0</x>
     <y>0</y>
     <width>472</width>
-    <height>744</height>
+    <height>818</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Countdown Galerie Konfiguration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Musik</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QWidget" name="widget_6" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Datei:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="_music_fn_label"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="_music_fn_button">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget_7" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QPushButton" name="_music_play_button">
+           <property name="text">
+            <string>Abspielen</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="_music_stop_button">
+           <property name="text">
+            <string>Stoppen</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
@@ -221,7 +288,8 @@
       <item row="8" column="1">
        <widget class="QCheckBox" name="_auto_quit_cb">
         <property name="text">
-         <string>Nach Countdown automatisch beenden</string>
+         <string>Nach Countdown automatisch beenden
+wenn kein Video kommt</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -232,67 +300,29 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_4">
+    <widget class="QGroupBox" name="groupBox_5">
      <property name="title">
-      <string>Musik</string>
+      <string>Video direkt nach Countdown</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <property name="spacing">
-       <number>0</number>
-      </property>
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_7">
       <item>
-       <widget class="QWidget" name="widget_6" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <item>
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>Datei:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="_music_fn_label"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="_music_fn_button">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Datei:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="widget_7" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <item>
-          <widget class="QPushButton" name="_music_play_button">
-           <property name="text">
-            <string>Abspielen</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="_music_stop_button">
-           <property name="text">
-            <string>Stoppen</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QLineEdit" name="_vid_fn_label"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="_vid_fn_button">
+        <property name="text">
+         <string/>
+        </property>
        </widget>
       </item>
      </layout>
@@ -438,25 +468,44 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_5">
-     <property name="title">
-      <string>Video direkt nach Countdown</string>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <widget class="QWidget" name="widget_8" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
-       <widget class="QLabel" name="label_14">
+       <widget class="QPushButton" name="_but_fullscreen">
         <property name="text">
-         <string>Datei:</string>
+         <string>Vollbild</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="_vid_fn_label"/>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="_vid_fn_button">
+       <widget class="QPushButton" name="_but_close">
         <property name="text">
-         <string/>
+         <string>Schließen</string>
         </property>
        </widget>
       </item>

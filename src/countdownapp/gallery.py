@@ -161,7 +161,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
 
     def _init_ui(self):
         self.setWindowTitle("Countdown Galerie")
-        self.resize(800, 700)
+        self.resize(900, 700)
 
         # central stacked widget
         self._stacked_widget = QtWidgets.QStackedWidget()
@@ -179,7 +179,11 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
 
         # create keyboard hint
         self._shortcut_help_label = QtWidgets.QLabel(self)
-        self._shortcut_help_label.setText("f = Vollbild\nq = Beenden\n")
+        self._shortcut_help_label.setText(
+            "f = Vollbild\nq = Beenden\nEsc = Vollbild verlassen\n"
+            "1...9 = Bildschirmecke"
+        )
+        self._shortcut_help_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self._shortcut_help_label.adjustSize()
         self._shortcut_help_label.setStyleSheet(
             "color: white; background-color: rgba(0,0,0,10)"
@@ -259,6 +263,8 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
             self.setTimerCorner(8)
         elif event.key() == QtCore.Qt.Key_9:
             self.setTimerCorner(9)
+        elif event.key() == QtCore.Qt.Key_Escape:
+            self.setFullScreen(False)
 
     def setTimerCorner(self, corner: int):
         self._timerCorner = corner
@@ -435,7 +441,15 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self.on_slideshow_padding_changed
         )
 
+        self._vid_fn_button.setIcon(
+            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
+        )
         self._vid_fn_button.clicked.connect(self.on_vid_fn_button_clicked)
+
+        self._but_fullscreen.clicked.connect(
+            lambda: self._gallery_window.setFullScreen(True)
+        )
+        self._but_close.clicked.connect(self.close)
 
     def on_auto_quit_cb_changed(self):
         self._gallery_window._auto_quit = self._auto_quit_cb.isChecked()
@@ -462,6 +476,8 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(str(music_file)))
         )
         self._gallery_window._music_player.play()
+        # TODO: wait until music really started, then set duration
+        self.on_end_time_changed()
 
     def on_music_stop_button_clicked(self):
         self._gallery_window._music_player.stop()
