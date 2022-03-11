@@ -567,7 +567,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self._gallery_window.setRemainingMusicTime(diff_seconds)
             self._gallery_window._timerWidget.start(end_time)
         except ValueError:
-            self._gallery_window._timerWidget.stop()
+            self._end_time_input.setText("10:00:00")
 
     def on_pause_changed(self):
         text = self._pause_input.text()
