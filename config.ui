@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>472</width>
-    <height>818</height>
+    <height>866</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,7 +46,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="_music_fn_label"/>
+          <widget class="QLineEdit" name="_music_fn_label">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="_music_fn_button">
@@ -72,6 +76,63 @@
           <widget class="QPushButton" name="_music_stop_button">
            <property name="text">
             <string>Stoppen</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Hintergrund</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Datei:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QWidget" name="widget_4" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="_bg_fn_label">
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="_bg_fn_button">
+           <property name="text">
+            <string/>
            </property>
           </widget>
          </item>
@@ -110,6 +171,16 @@
          <string>10:00:00</string>
         </property>
        </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Schriftart:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QFontComboBox" name="_font_select"/>
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_3">
@@ -268,16 +339,6 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QFontComboBox" name="_font_select"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Schriftart:</string>
-        </property>
-       </widget>
-      </item>
       <item row="8" column="0">
        <widget class="QLabel" name="label_13">
         <property name="text">
@@ -316,70 +377,17 @@ wenn kein Video kommt</string>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="_vid_fn_label"/>
+       <widget class="QLineEdit" name="_vid_fn_label">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="_vid_fn_button">
         <property name="text">
          <string/>
         </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Hintergrund</string>
-     </property>
-     <layout class="QFormLayout" name="formLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Datei:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QWidget" name="widget_4" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <property name="spacing">
-          <number>5</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLineEdit" name="_bg_fn_label">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="_bg_fn_button">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>
@@ -424,6 +432,9 @@ wenn kein Video kommt</string>
              <height>0</height>
             </size>
            </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
@@ -461,6 +472,13 @@ wenn kein Video kommt</string>
        <widget class="QLineEdit" name="_slideshow_paddings">
         <property name="text">
          <string>10 40 20 3</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="_cb_show_slides_frame">
+        <property name="text">
+         <string>Positionsrahmen anzeigen</string>
         </property>
        </widget>
       </item>

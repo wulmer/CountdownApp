@@ -139,6 +139,12 @@ class Slideshow(QtWidgets.QWidget):
     def _init_ui(self):
         self._view = PixmapView(self)
 
+    def showFrame(self, visible: bool):
+        if visible:
+            self._view._pic_label.setStyleSheet("border: 1px solid red")
+        else:
+            self._view._pic_label.setStyleSheet("")
+
     def resizeEvent(self, event):
         size = self.size()
         self._view.setGeometry(0, 0, size.width(), size.height())
@@ -452,6 +458,10 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         )
         self._but_close.clicked.connect(self.close)
 
+        self._cb_show_slides_frame.stateChanged.connect(
+            self.on_show_slides_frame_cb_changed
+        )
+
     def on_auto_quit_cb_changed(self):
         self._gallery_window._auto_quit = self._auto_quit_cb.isChecked()
 
@@ -460,6 +470,12 @@ class GalleryConfigWindow(QtWidgets.QWidget):
             self._gallery_window._timerWidget.show()
         else:
             self._gallery_window._timerWidget.hide()
+
+    def on_show_slides_frame_cb_changed(self):
+        if self._cb_show_slides_frame.isChecked():
+            self._gallery_window._slidesWidget.showFrame(True)
+        else:
+            self._gallery_window._slidesWidget.showFrame(False)
 
     def on_vid_fn_button_clicked(self):
         (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)
