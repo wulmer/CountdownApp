@@ -355,6 +355,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
 
     def _on_timer_finished(self):
         self._slidesWidget.stop()
+        self._music_player.stop()
         video_file = self._config_window._vid_fn_label.text()
         if video_file:
             self._stacked_widget.setCurrentWidget(self._video_widget)
