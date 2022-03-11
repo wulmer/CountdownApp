@@ -190,10 +190,11 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
             "1...9 = Bildschirmecke"
         )
         self._shortcut_help_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        self._shortcut_help_label.adjustSize()
         self._shortcut_help_label.setStyleSheet(
-            "color: white; background-color: rgba(0,0,0,10)"
+            "color: white; background-color: rgba(0,0,0,60);"
+            "border-radius: 20px; padding: 1em"
         )
+        self._shortcut_help_label.adjustSize()
 
         self._stacked_widget.addWidget(self._widget)
 
