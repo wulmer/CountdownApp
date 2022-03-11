@@ -228,7 +228,11 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         if mp.isAudioAvailable():
             duration = mp.duration()
             seek_time = duration - diff_seconds * 1000
-            mp.setPosition(seek_time)
+            if seek_time >= 0:
+                mp.setPosition(seek_time)
+                self._config_window._music_duration_lcd.setStyleSheet("color: black")
+            else:
+                self._config_window._music_duration_lcd.setStyleSheet("color: red")
 
     def setTimerPaddingX(self, padding):
         self._timerWidget.setPaddingX(padding)
@@ -431,7 +435,18 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         )
         self._music_fn_button.clicked.connect(self.on_music_fn_button_clicked)
         self._music_play_button.clicked.connect(self.on_music_play_button_clicked)
-        self._music_stop_button.clicked.connect(self.on_music_stop_button_clicked)
+        self._gallery_window._music_player.durationChanged.connect(
+            self._music_duration_slider.setMaximum
+        )
+        self._gallery_window._music_player.positionChanged.connect(
+            self._music_duration_slider.setValue
+        )
+        self._gallery_window._music_player.positionChanged.connect(
+            self.on_music_position_changed
+        )
+        self._gallery_window._music_player.stateChanged.connect(
+            self.on_music_player_state_changed
+        )
 
         self._bg_fn_button.setIcon(
             QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_FileIcon),
@@ -488,17 +503,30 @@ class GalleryConfigWindow(QtWidgets.QWidget):
         if choice:
             self._music_fn_label.setText(choice)
 
-    def on_music_play_button_clicked(self):
-        music_file = Path(self._music_fn_label.text())
-        self._gallery_window._music_player.setMedia(
-            QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(str(music_file)))
-        )
-        self._gallery_window._music_player.play()
-        # TODO: wait until music really started, then set duration
-        self.on_end_time_changed()
+    def on_music_play_button_clicked(self, checked):
+        if (
+            self._gallery_window._music_player.state()
+            == QtMultimedia.QMediaPlayer.State.StoppedState
+        ):
+            music_file = Path(self._music_fn_label.text())
+            self._gallery_window._music_player.setMedia(
+                QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile(str(music_file)))
+            )
+            self._gallery_window._music_player.play()
+        else:
+            self._gallery_window._music_player.stop()
 
-    def on_music_stop_button_clicked(self):
-        self._gallery_window._music_player.stop()
+    def on_music_player_state_changed(self, newstate):
+        if newstate == QtMultimedia.QMediaPlayer.State.PlayingState:
+            QtCore.QTimer.singleShot(100, self.on_end_time_changed)
+            self._music_play_button.setChecked(True)
+        if newstate == QtMultimedia.QMediaPlayer.State.StoppedState:
+            self._music_play_button.setChecked(False)
+
+    def on_music_position_changed(self, position):
+        duration = self._gallery_window._music_player.duration()
+        remaining = QtCore.QTime(0, 0, 0).addSecs((duration - position) / 1000)
+        self._music_duration_lcd.display(remaining.toString("mm:ss"))
 
     def on_bg_fn_button_clicked(self):
         (choice, _) = QtWidgets.QFileDialog.getOpenFileName(parent=self)

@@ -70,12 +70,25 @@
            <property name="text">
             <string>Abspielen</string>
            </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="_music_stop_button">
-           <property name="text">
-            <string>Stoppen</string>
+          <widget class="QSlider" name="_music_duration_slider">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLCDNumber" name="_music_duration_lcd">
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
            </property>
           </widget>
          </item>
@@ -533,6 +546,11 @@ wenn kein Video kommt</string>
   </layout>
  </widget>
  <tabstops>
+  <tabstop>_music_fn_label</tabstop>
+  <tabstop>_music_fn_button</tabstop>
+  <tabstop>_music_play_button</tabstop>
+  <tabstop>_bg_fn_label</tabstop>
+  <tabstop>_bg_fn_button</tabstop>
   <tabstop>_visible_timer_cb</tabstop>
   <tabstop>_end_time_input</tabstop>
   <tabstop>_font_select</tabstop>
@@ -548,12 +566,16 @@ wenn kein Video kommt</string>
   <tabstop>_corner_3_button</tabstop>
   <tabstop>_padding_x_slider</tabstop>
   <tabstop>_padding_y_slider</tabstop>
-  <tabstop>_bg_fn_label</tabstop>
-  <tabstop>_bg_fn_button</tabstop>
+  <tabstop>_auto_quit_cb</tabstop>
+  <tabstop>_vid_fn_label</tabstop>
+  <tabstop>_vid_fn_button</tabstop>
   <tabstop>_dir_label</tabstop>
   <tabstop>_dir_button</tabstop>
   <tabstop>_pause_input</tabstop>
   <tabstop>_slideshow_paddings</tabstop>
+  <tabstop>_cb_show_slides_frame</tabstop>
+  <tabstop>_but_fullscreen</tabstop>
+  <tabstop>_but_close</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -564,12 +586,12 @@ wenn kein Video kommt</string>
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>234</x>
-     <y>285</y>
+     <x>430</x>
+     <y>481</y>
     </hint>
     <hint type="destinationlabel">
-     <x>187</x>
-     <y>282</y>
+     <x>190</x>
+     <y>483</y>
     </hint>
    </hints>
   </connection>
@@ -580,12 +602,12 @@ wenn kein Video kommt</string>
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>214</x>
-     <y>320</y>
+     <x>410</x>
+     <y>520</y>
     </hint>
     <hint type="destinationlabel">
-     <x>188</x>
-     <y>322</y>
+     <x>190</x>
+     <y>522</y>
     </hint>
    </hints>
   </connection>
