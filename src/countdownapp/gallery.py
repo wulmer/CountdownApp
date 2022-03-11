@@ -29,6 +29,7 @@ class PixmapView(QtWidgets.QWidget):
         self._bg_pic_label = QtWidgets.QLabel(self)
         self._pic: Optional[QtGui.QPixmap] = None
         self._pic_label = QtWidgets.QLabel(self)
+        self._pic_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
     def set_background_picture(self, filename: Path):
         self._bg_pic = QtGui.QPixmap(str(filename))
@@ -43,12 +44,14 @@ class PixmapView(QtWidgets.QWidget):
         self.resizeEvent()
 
     def calc_margins(self, outside, inside):
-        left = (outside.width() - inside.width()) / 2
-        top = (outside.height() - inside.height()) / 2
-        right = outside.width() - (inside.width() + left)
-        bottom = outside.height() - (inside.height() + top)
-
-        return QtCore.QMargins(-left, -top, -right, -bottom)
+        horizontal_margin = (outside.width() - inside.width()) / 2
+        vertical_margin = (outside.height() - inside.height()) / 2
+        return QtCore.QMargins(
+            -horizontal_margin,
+            -vertical_margin,
+            -horizontal_margin,
+            -vertical_margin,
+        )
 
     def setSlideShowPaddings(self, paddings):
         if len(paddings) == 4:
@@ -87,9 +90,6 @@ class PixmapView(QtWidgets.QWidget):
                 QtCore.Qt.TransformationMode.SmoothTransformation,
             )
             self._pic_label.setPixmap(scaled)
-            self._pic_label.setContentsMargins(
-                self.calc_margins(slides_size, scaled.size())
-            )
         else:
             self._pic_label.hide()
         self._pic_label.setGeometry(
