@@ -1,7 +1,6 @@
 import datetime
 import time
 from threading import Thread
-from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -11,9 +10,9 @@ class CountdownTimer(QtWidgets.QLabel):
 
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(parent)
-        self._end_time: Optional[datetime.datetime] = None
+        self._end_time: datetime.datetime | None = None
         self._active = False
-        self._color: Optional[QtGui.QColor] = None
+        self._color: QtGui.QColor | None = None
         self._padding_x = 0
         self._padding_y = 0
         self._init_ui()
@@ -30,7 +29,11 @@ class CountdownTimer(QtWidgets.QLabel):
         self._updateStyleSheet()
 
     def _updateStyleSheet(self):
-        stylesheet = f"color: {self._color.name()}; margin: {self._padding_y}px {self._padding_x}px; qproperty-indent:0;"
+        stylesheet = (
+            f"color: {self._color.name()}; "
+            f"margin: {self._padding_y}px {self._padding_x}px; "
+            f"qproperty-indent:0;"
+        )
         self.setStyleSheet(stylesheet)
 
     def setPaddingX(self, padding):

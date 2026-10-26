@@ -1,7 +1,6 @@
 import datetime
 import sys
 from pathlib import Path
-from typing import Optional
 
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtMultimediaWidgets, QtWidgets, uic
 
@@ -13,8 +12,8 @@ IMG_SUFFIXES = {".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".png"}
 def resource_path(relative_path: str) -> Path:
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = Path(sys._MEIPASS)
-    except Exception:
+        base_path = Path(sys._MEIPASS)  # pylint: disable=no-member,protected-access
+    except AttributeError:
         base_path = Path(".")
 
     return base_path.joinpath(relative_path)
@@ -25,9 +24,9 @@ class PixmapView(QtWidgets.QWidget):
         super().__init__(parent)
 
         self._slideshow_paddings = [0, 0, 0, 0]
-        self._bg_pic: Optional[QtGui.QPixmap] = None
+        self._bg_pic: QtGui.QPixmap | None = None
         self._bg_pic_label = QtWidgets.QLabel(self)
-        self._pic: Optional[QtGui.QPixmap] = None
+        self._pic: QtGui.QPixmap | None = None
         self._pic_label = QtWidgets.QLabel(self)
         self._pic_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
@@ -44,8 +43,8 @@ class PixmapView(QtWidgets.QWidget):
         self.resizeEvent()
 
     def calc_margins(self, outside, inside):
-        horizontal_margin = (outside.width() - inside.width()) / 2
-        vertical_margin = (outside.height() - inside.height()) / 2
+        horizontal_margin = int((outside.width() - inside.width()) / 2)
+        vertical_margin = int((outside.height() - inside.height()) / 2)
         return QtCore.QMargins(
             -horizontal_margin,
             -vertical_margin,
@@ -77,11 +76,11 @@ class PixmapView(QtWidgets.QWidget):
         p = self._slideshow_paddings.copy()
         w = size.width()
         h = size.height()
-        p[0] = p[0] / 100 * h
-        p[1] = p[1] / 100 * w
-        p[2] = p[2] / 100 * h
-        p[3] = p[3] / 100 * w
-        slides_size = QtCore.QSize(w - (p[1] + p[3]), h - (p[0] + p[2]))
+        p[0] = int(p[0] / 100 * h)
+        p[1] = int(p[1] / 100 * w)
+        p[2] = int(p[2] / 100 * h)
+        p[3] = int(p[3] / 100 * w)
+        slides_size = QtCore.QSize(int(w - (p[1] + p[3])), int(h - (p[0] + p[2])))
         if self._pic:
             self._pic_label.show()
             scaled = self._pic.scaled(
@@ -153,14 +152,14 @@ class Slideshow(QtWidgets.QWidget):
 class GalleryCountdownWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self._timerWidget = None
-        self._slidesWidget = None
-        self._video_widget = None
-        self._shortcut_help_label = None
-        self._is_fullscreen = False
-        self._timerCorner = 3
+        self._timerWidget: CountdownTimer
+        self._slidesWidget: Slideshow
+        self._video_widget: QtMultimediaWidgets.QVideoWidget
+        self._shortcut_help_label: QtWidgets.QLabel
+        self._is_fullscreen: bool = False
+        self._timerCorner: int = 3
         self._music_player = QtMultimedia.QMediaPlayer()
-        self._auto_quit = True
+        self._auto_quit: bool = True
         self._init_ui()
         self._config_window = GalleryConfigWindow(self)
         self._config_window.show()
@@ -227,7 +226,7 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         mp = self._music_player
         if mp.isAudioAvailable():
             duration = mp.duration()
-            seek_time = duration - diff_seconds * 1000
+            seek_time = int(duration - diff_seconds * 1000)
             if seek_time >= 0:
                 mp.setPosition(seek_time)
                 self._config_window._music_duration_lcd.setStyleSheet("color: black")
@@ -348,21 +347,20 @@ class GalleryCountdownWindow(QtWidgets.QMainWindow):
         # Shortcuts
         lbl_size = self._shortcut_help_label.size()
         self._shortcut_help_label.move(
-            (width - lbl_size.width()) / 2,
-            (height - lbl_size.height()) / 2,
+            int((width - lbl_size.width()) / 2),
+            int((height - lbl_size.height()) / 2),
         )
 
         # Video
         self._video_widget.setGeometry(0, 0, width, height)
 
     def _media_status_changed(self, status):
-        print(status)
+        print(f"media status: {status}")
 
     def _on_video_state_changed(self, state):
-        print(state)
-        if state == QtMultimedia.QMediaPlayer.State.StoppedState:
-            if self._auto_quit:
-                self.close()
+        print(f"video state: {state}")
+        if state == QtMultimedia.QMediaPlayer.State.StoppedState and self._auto_quit:
+            self.close()
 
     def _on_timer_finished(self):
         self._slidesWidget.stop()
@@ -525,7 +523,7 @@ class GalleryConfigWindow(QtWidgets.QWidget):
 
     def on_music_position_changed(self, position):
         duration = self._gallery_window._music_player.duration()
-        remaining = QtCore.QTime(0, 0, 0).addSecs((duration - position) / 1000)
+        remaining = QtCore.QTime(0, 0, 0).addSecs(int((duration - position) / 1000))
         self._music_duration_lcd.display(remaining.toString("mm:ss"))
 
     def on_bg_fn_button_clicked(self):

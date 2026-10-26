@@ -1,0 +1,22 @@
+[project]
+name = "countdownapp"
+version = "0.2.0"
+readme = "README.md"
+authors = [{ name = "Wolfgang Ulmer", email = "wulmer@web.de" }]
+requires-python = ">=3.14"
+dependencies = [
+  "pefile>=2024.8.26",
+  "pyinstaller>=6.22.3",
+  "pyqt5>=5.15.11",
+  "pywin32-ctypes>=0.2.3",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["mypy>=2.4.0", "ruff>=0.17.1", "types-setuptools>=84.0.0.20261006"]
+
+[tool.ruff]
+line-length = 88

@@ -484,7 +484,7 @@ wenn kein Video kommt</string>
       <item row="2" column="1">
        <widget class="QLineEdit" name="_slideshow_paddings">
         <property name="text">
-         <string>10 40 20 3</string>
+         <string>10 40 10 3</string>
         </property>
        </widget>
       </item>
