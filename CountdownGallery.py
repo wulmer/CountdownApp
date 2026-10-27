@@ -1,4 +1,6 @@
+import os
 import sys
+os.environ['QT_MULTIMEDIA_PREFERRED_PLUGINS'] = 'windowsmediafoundation'
 
 from PyQt5 import QtWidgets
 
